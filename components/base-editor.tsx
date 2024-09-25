@@ -16,14 +16,15 @@ export default function BaseEditor({ articleHtml }: { articleHtml: string }) {
   };
 
   return (
-    <div className="grid grid-cols-[1fr_600px]">
-      <ContentEditable
-        className="p-4 focus:outline-none"
-        html={content}
-        disabled={false} // Set to true to make it read-only
-        onChange={handleChange}
-      />
-      <div>(Chat for Chord)</div>
+    <div className="grid grid-cols-[1fr_600px] h-screen overflow-hidden">
+      <div className="overflow-auto">
+        <ContentEditable
+          className="p-4 focus:outline-none"
+          html={content}
+          disabled={false}
+          onChange={handleChange}
+        />
+      </div>
     </div>
   );
 }
