@@ -1,10 +1,14 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import ContentEditable from "react-contenteditable";
 
 export default function BaseEditor({ articleHtml }: { articleHtml: string }) {
   const [content, setContent] = useState(articleHtml);
+
+  useEffect(() => {
+    setContent(articleHtml);
+  }, [articleHtml]);
 
   const handleChange = (evt: React.FormEvent<HTMLDivElement>) => {
     setContent(evt.currentTarget.innerHTML);
@@ -14,7 +18,7 @@ export default function BaseEditor({ articleHtml }: { articleHtml: string }) {
   return (
     <div className="grid grid-cols-[1fr_600px]">
       <ContentEditable
-        className="p-4"
+        className="p-4 focus:outline-none"
         html={content}
         disabled={false} // Set to true to make it read-only
         onChange={handleChange}
