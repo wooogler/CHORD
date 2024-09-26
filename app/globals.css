@@ -33,6 +33,10 @@ body {
   }
 }
 
+#prompt-editor-content .highlight-yellow {
+  background-color: yellow;
+}
+
 @layer utilities {
   .text-balance {
     text-wrap: balance;
