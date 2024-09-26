@@ -8,24 +8,28 @@ export default function SideNav() {
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const { replace } = useRouter();
-  const [titles, setTitles] = useState<Array<string>>([])
+  const [titles, setTitles] = useState<Array<string>>([
+    "Virginia Tech",
+    "Blacksburg, Virginia",
+    "Hokiebird",
+  ]);
 
   useEffect(() => {
-    let storedTitles = localStorage.getItem("titles")
+    let storedTitles = localStorage.getItem("titles");
     if (storedTitles === null || storedTitles === "") {
-      storedTitles = "[]"
+      storedTitles = "[]";
     }
-    setTitles(JSON.parse(storedTitles))
-  }, [])
+    setTitles(JSON.parse(storedTitles));
+  }, []);
 
   useEffect(() => {
-    localStorage.setItem("titles", JSON.stringify(titles))
-  }, [titles])
+    localStorage.setItem("titles", JSON.stringify(titles));
+  }, [titles]);
 
   const handleSearch = (title: string) => {
     if (titles.every((currTitle) => currTitle !== title)) {
-      titles.push(title)
-      setTitles([...titles])
+      titles.push(title);
+      setTitles([...titles]);
     }
     const params = new URLSearchParams(searchParams);
     if (title) {
@@ -47,8 +51,8 @@ export default function SideNav() {
           onKeyDown={(e) => {
             if (e.code === "Enter") {
               //@ts-expect-error there is a value present
-              handleSearch(e.target.value)
-              e.preventDefault()
+              handleSearch(e.target.value);
+              e.preventDefault();
             }
           }}
         />
