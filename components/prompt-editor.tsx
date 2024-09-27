@@ -4,10 +4,13 @@ import React, { useEffect, useState } from "react";
 import ContentEditable from "react-contenteditable";
 import OpenAI from "openai";
 import { Stack, Typography, Box } from "@mui/material";
+import { editArticleWithPrompt } from "@/lib/llm";
 
 export default function PromptEditor({ articleHtml }: { articleHtml: string }) {
   const [content, setContent] = useState(articleHtml);
+  const [selectedHtml, setSelectedHtml] = useState("");
   const [prompt, setPrompt] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     setContent(articleHtml);
@@ -25,7 +28,6 @@ export default function PromptEditor({ articleHtml }: { articleHtml: string }) {
       // 1. Remove existing highlight
       const editor = document.getElementById("prompt-editor-content");
       if (editor) {
-        // Replace all existing spans with the original content (removing highlight)
         editor.querySelectorAll(".highlight-yellow").forEach((highlight) => {
           const parent = highlight.parentNode;
           while (highlight.firstChild) {
@@ -40,39 +42,71 @@ export default function PromptEditor({ articleHtml }: { articleHtml: string }) {
       highlightSpan.className = "highlight-yellow";
       const selectedContent = range.extractContents();
       highlightSpan.appendChild(selectedContent);
+
       range.insertNode(highlightSpan);
 
-      // Clear the selection
       selection.removeAllRanges();
 
-      // Update the content state to reflect changes
       setContent(
         document.getElementById("prompt-editor-content")?.innerHTML || ""
       );
+      setSelectedHtml(highlightSpan.innerHTML);
+
+      const spinnerSpan = document.createElement("span");
+      spinnerSpan.className =
+        "inline-block animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-blue-500 hidden spinner";
+      highlightSpan.appendChild(spinnerSpan);
     }
   };
 
-  // const getPromptAnswer = () => {
-  //   setPrompt("")
-  //   setSelectedText("")
-  //   const overallPrompt = 'Change this piece of text: "' + selectedText + '" by following this prompt: "' + prompt + '"'
-  //   convoMessages.push(overallPrompt)
-  //   openai.chat.completions.create({
-  //     model: "gpt-4o-mini",
-  //     messages: [
-  //       { role: "system", content: "You are a helpful assistant that edits Wikipedia articles, following all style guides." },
-  //       {
-  //         role: "user",
-  //         content: overallPrompt,
-  //       },
-  //     ],
-  //   }).then((completion) => {
-  //     if (completion.choices[0].message.content) {
-  //       convoMessages.push(completion.choices[0].message.content as string)
-  //     }
-  //     setConvoMessages([...convoMessages])
-  //   })
-  // }
+  const handleSubmit = async () => {
+    if (!selectedHtml || !prompt) return;
+
+    setIsLoading(true);
+    try {
+      // Show spinner
+      const highlightedSpan = document.querySelector(".highlight-yellow");
+      if (highlightedSpan) {
+        const spinner = highlightedSpan.querySelector(".spinner");
+        if (spinner) spinner.classList.remove("hidden");
+      }
+
+      const editedHtml = await editArticleWithPrompt({
+        articleHtml: selectedHtml,
+        userPrompt: prompt,
+      });
+      setContent((prevContent) => {
+        // Create a temporary DOM element
+        const tempDiv = document.createElement("div");
+        tempDiv.innerHTML = prevContent;
+
+        // Find the span element with the highlight-yellow class
+        const highlightedSpan = tempDiv.querySelector("span.highlight-yellow");
+
+        if (highlightedSpan) {
+          // Create a new span element
+          const newSpan = document.createElement("span");
+          newSpan.className = "highlight-green";
+          newSpan.innerHTML = editedHtml || "";
+
+          // Replace the existing element with the new one
+          highlightedSpan.parentNode?.replaceChild(newSpan, highlightedSpan);
+
+          // Return the modified HTML
+          return tempDiv.innerHTML;
+        }
+
+        // If no matching element is found, return the original content
+        return prevContent;
+      });
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsLoading(false);
+      setSelectedHtml("");
+      setPrompt("");
+    }
+  };
 
   return (
     <div className="grid grid-cols-[1fr_600px] h-full">
@@ -94,38 +128,23 @@ export default function PromptEditor({ articleHtml }: { articleHtml: string }) {
           onChange={(e) => setPrompt(e.target.value)}
           onKeyDown={(e) => {
             if (e.code === "Enter") {
-              // getPromptAnswer()
+              handleSubmit();
               e.preventDefault();
             }
           }}
+          disabled={isLoading}
         />
         <button
-          onClick={() => {
-            // getPromptAnswer()
-          }}
-          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+          onClick={handleSubmit}
+          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 flex items-center justify-center"
+          disabled={isLoading}
         >
-          Submit
+          {isLoading ? (
+            <span className="inline-block animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white"></span>
+          ) : (
+            "Submit"
+          )}
         </button>
-        {/* <Stack>
-          {convoMessages.map((message, index) => {
-            return (
-              <Box
-                key={message}
-                sx={{
-                  m: 1,
-                  maxWidth: "80%", borderRadius: 5,
-                  backgroundColor: index % 2 === 0 ? "white" : "cornsilk",
-                  alignSelf: index % 2 === 0 ? "self-end" : null
-                }}
-              >
-                <Typography sx={{ m: 1, mx: 2, overflow: "auto", color: "black" }}>
-                  {message}
-                </Typography>
-              </Box>
-            )
-          })}
-        </Stack> */}
       </div>
     </div>
   );
