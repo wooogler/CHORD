@@ -6,18 +6,18 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 export async function editArticleWithPrompt({
   articleHtml,
-  userPrompt,
+  userInput,
 }: {
   articleHtml: string;
-  userPrompt: string;
+  userInput: string;
 }) {
   console.log("articleHtml", articleHtml);
-  console.log("userPrompt", userPrompt);
+  console.log("userInput", userInput);
   try {
     const systemPrompt = `You are editing a part of a Wikipedia article in HTML format based on the user's request. Maintain the original HTML structure, including all HTML tags, while only modifying the content as specified by the user. Do not change or remove any HTML tags. Ensure that your response includes all original HTML tags.`;
 
     const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+      model: "gpt-4o",
       messages: [
         {
           role: "system",
@@ -25,7 +25,7 @@ export async function editArticleWithPrompt({
         },
         {
           role: "user",
-          content: `Original HTML:\n${articleHtml}\n\nUser Request: ${userPrompt}\n\nPlease edit the content as requested, but make sure to keep all original HTML tags intact. Your response should be valid HTML.`,
+          content: `Original HTML:\n${articleHtml}\n\nUser Request: ${userInput}\n\nPlease edit the content as requested, but make sure to keep all original HTML tags intact. Your response should be valid HTML.`,
         },
       ],
     });

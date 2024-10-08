@@ -2,19 +2,33 @@
 
 import React, { useEffect, useState } from "react";
 import ContentEditable from "react-contenteditable";
+import ChatContainer from "./chat-container";
+import { Switch, FormControlLabel } from "@mui/material";
+import WikiViewer from "./wiki-viewer";
+import EditModeSwitch from "./edit-mode-switch";
 
-export default function ChordEditor({ articleHtml }: { articleHtml: string }) {
-  const [content, setContent] = useState(articleHtml);
+export default function ChordEditor({
+  articleHtml,
+  articleTitle,
+}: {
+  articleHtml: string;
+  articleTitle: string;
+}) {
+  const [contentHtml, setContentHtml] = useState(articleHtml);
+  const [selectedHtml, setSelectedHtml] = useState("");
+  const [isEditable, setIsEditable] = useState(true);
 
   useEffect(() => {
-    setContent(articleHtml);
+    setContentHtml(articleHtml);
   }, [articleHtml]);
 
   const handleChange = (evt: React.FormEvent<HTMLDivElement>) => {
-    setContent(evt.currentTarget.innerHTML);
+    setContentHtml(evt.currentTarget.innerHTML);
   };
 
   const handleSelection = () => {
+    if (!isEditable) return;
+
     const selection = window.getSelection();
     if (selection && !selection.isCollapsed) {
       const range = selection.getRangeAt(0);
@@ -43,25 +57,38 @@ export default function ChordEditor({ articleHtml }: { articleHtml: string }) {
       selection.removeAllRanges();
 
       // Update the content state to reflect changes
-      setContent(
+      setContentHtml(
         document.getElementById("prompt-editor-content")?.innerHTML || ""
       );
+      setSelectedHtml(highlightSpan.innerHTML);
     }
+  };
+
+  const toggleEditable = () => {
+    setIsEditable(!isEditable);
   };
 
   return (
     <div className="grid grid-cols-[1fr_600px] h-full">
-      <div className="h-full overflow-auto">
-        <ContentEditable
-          className="p-4 focus:outline-none min-h-full"
-          id="prompt-editor-content"
-          html={content}
-          disabled={false}
-          onChange={handleChange}
-          onMouseUp={handleSelection}
+      <WikiViewer
+        content={contentHtml}
+        isEditable={isEditable}
+        handleChange={handleChange}
+        handleSelection={handleSelection}
+        articleTitle={articleTitle}
+      />
+      <div className="flex flex-col h-full">
+        <EditModeSwitch
+          isEditable={isEditable}
+          toggleEditable={toggleEditable}
+        />
+        <ChatContainer
+          selectedHtml={selectedHtml}
+          setSelectedHtml={setSelectedHtml}
+          setContentHtml={setContentHtml}
+          condition="chord"
         />
       </div>
-      <div className="flex flex-col p-4 h-full">CHORD UI</div>
     </div>
   );
 }

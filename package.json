@@ -12,6 +12,7 @@
     "@ai-sdk/openai": "^0.0.63",
     "@emotion/react": "^11.13.3",
     "@emotion/styled": "^11.13.0",
+    "@mui/icons-material": "^6.1.2",
     "@mui/material": "^6.1.1",
     "@tailwindcss/typography": "^0.5.15",
     "ai": "^3.4.6",

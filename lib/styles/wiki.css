@@ -4857,6 +4857,11 @@ div.flaggedrevs_short {
   font-style: italic;
   font-size: 90%;
 }
+#firstHeading > i {
+  font-size: 1.8em;
+  font-family: "Linux Libertine", "Georgia", "Times", "Source Serif Pro", serif;
+  line-height: 1.375;
+}
 @media print {
   .ns-0 .metadata,
   .editlink,

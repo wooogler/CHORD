@@ -15,5 +15,5 @@ export default async function BasePage({
     articleHtml = (await getArticleHtmlByTitle(title)) || "";
   }
 
-  return <BaseEditor articleHtml={articleHtml} />;
+  return <BaseEditor articleHtml={articleHtml} articleTitle={title} />;
 }

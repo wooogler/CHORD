@@ -15,5 +15,5 @@ export default async function PromptPage({
     articleHtml = (await getArticleHtmlByTitle(title)) || "";
   }
 
-  return <PromptEditor articleHtml={articleHtml} />;
+  return <PromptEditor articleHtml={articleHtml} articleTitle={title} />;
 }
