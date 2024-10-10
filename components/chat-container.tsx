@@ -36,7 +36,7 @@ export default function ChatContainer({
           if (spinner) spinner.classList.remove("hidden");
         }
 
-        const editedHtml = await editArticleWithPrompt({
+        const response = await editArticleWithPrompt({
           articleHtml: selectedHtml,
           userInput: userInput,
         });
@@ -55,7 +55,11 @@ export default function ChatContainer({
             // Create a new span element
             const newSpan = document.createElement("span");
             newSpan.className = "highlight-green";
-            newSpan.innerHTML = editedHtml || "";
+            if (response.edit) {
+              newSpan.innerHTML = response.text || "";
+            } else {
+              newSpan.innerHTML = prevContentHtml
+            }
 
             // Replace the existing element with the new one
             highlightedSpan.parentNode?.replaceChild(newSpan, highlightedSpan);
@@ -71,7 +75,7 @@ export default function ChatContainer({
         setMessages([
           ...messages,
           { role: "user", content: userInput },
-          { role: "assistant", content: editedHtml },
+          { role: "assistant", content: response.text },
         ]);
       } catch (error) {
         console.error(error);
@@ -102,11 +106,10 @@ export default function ChatContainer({
           {messages.map((message, index) => (
             <div
               key={index}
-              className={`max-w-[70%] rounded-lg p-3 ${
-                message.role === "user"
-                  ? "bg-blue-500 text-white self-end"
-                  : "bg-gray-200 text-black self-start"
-              }`}
+              className={`max-w-[70%] rounded-lg p-3 ${message.role === "user"
+                ? "bg-blue-500 text-white self-end"
+                : "bg-gray-200 text-black self-start"
+                }`}
               dangerouslySetInnerHTML={{ __html: message.content }}
             />
           ))}
