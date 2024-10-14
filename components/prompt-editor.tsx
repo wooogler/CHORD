@@ -1,10 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import ContentEditable from "react-contenteditable";
-import { editArticleWithPrompt } from "@/lib/llm";
 import ChatContainer from "./chat-container";
-import { Switch, FormControlLabel } from "@mui/material";
 import WikiViewer from "./wiki-viewer";
 import EditModeSwitch from "./edit-mode-switch";
 export default function PromptEditor({
@@ -72,7 +69,7 @@ export default function PromptEditor({
   };
 
   return (
-    <div className="grid grid-cols-[1fr_600px] h-full">
+    <div className="flex h-full">
       <WikiViewer
         content={contentHtml}
         isEditable={isEditable}
@@ -80,7 +77,7 @@ export default function PromptEditor({
         handleSelection={handleSelection}
         articleTitle={articleTitle}
       />
-      <div className="flex flex-col h-full">
+      <div className="flex flex-col h-full w-[500px] flex-shrink-0">
         <EditModeSwitch
           isEditable={isEditable}
           toggleEditable={toggleEditable}

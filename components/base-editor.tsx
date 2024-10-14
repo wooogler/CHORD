@@ -29,14 +29,14 @@ export default function BaseEditor({
   };
 
   return (
-    <div className="grid grid-cols-[1fr_600px] h-screen overflow-hidden">
+    <div className="flex h-full">
       <WikiViewer
         articleTitle={articleTitle}
         content={content}
         isEditable={isEditable}
         handleChange={handleChange}
       />
-      <div className="flex flex-col h-full">
+      <div className="flex flex-col h-full min-h-0 w-[500px] flex-shrink-0">
         <EditModeSwitch
           isEditable={isEditable}
           toggleEditable={toggleEditable}

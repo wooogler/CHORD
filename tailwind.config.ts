@@ -15,5 +15,15 @@ const config: Config = {
     },
   },
   plugins: [require("@tailwindcss/typography")],
+  safelist: [
+    {
+      pattern:
+        /bg-(red|green|yellow|pink|purple|indigo|teal|stone|amber|orange|lime|emerald|cyan|sky|violet|fuchsia|rose)-200/,
+    },
+    {
+      pattern:
+        /text-(red|green|yellow|pink|purple|indigo|teal|stone|amber|orange|lime|emerald|cyan|sky|violet|fuchsia|rose)-600/,
+    },
+  ],
 };
 export default config;

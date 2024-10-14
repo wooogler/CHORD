@@ -1,7 +1,17 @@
 "use client";
 
 import { editArticleWithPrompt } from "@/lib/llm";
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
+import MessageBubble from "./message-bubble";
+
+export type MessageRole = "user" | "assistant" | "representative" | "agent";
+export type Message = {
+  role: MessageRole;
+  content: string;
+  originalContentHtml?: string;
+  editedContentHtml?: string;
+  agentName?: string;
+};
 
 export default function ChatContainer({
   selectedHtml,
@@ -14,17 +24,21 @@ export default function ChatContainer({
   setContentHtml: React.Dispatch<React.SetStateAction<string>>;
   condition: "prompt" | "chord";
 }) {
-  const [messages, setMessages] = useState<
-    {
-      role: "user" | "assistant";
-      content: string;
-    }[]
-  >([]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [userInput, setUserInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
   const handleSubmit = async () => {
-    if (!selectedHtml || !userInput) return;
+    if (!userInput) return;
 
     setIsLoading(true);
     if (condition === "prompt") {
@@ -58,7 +72,7 @@ export default function ChatContainer({
             if (response.edit) {
               newSpan.innerHTML = response.text || "";
             } else {
-              newSpan.innerHTML = prevContentHtml
+              newSpan.innerHTML = prevContentHtml;
             }
 
             // Replace the existing element with the new one
@@ -75,7 +89,12 @@ export default function ChatContainer({
         setMessages([
           ...messages,
           { role: "user", content: userInput },
-          { role: "assistant", content: response.text },
+          {
+            role: "assistant",
+            content: "Response",
+            originalContentHtml: selectedHtml,
+            editedContentHtml: response.text,
+          },
         ]);
       } catch (error) {
         console.error(error);
@@ -89,33 +108,43 @@ export default function ChatContainer({
         setMessages([
           ...messages,
           { role: "user", content: userInput },
-          { role: "assistant", content: "chord messages" },
+          { role: "representative", content: "chord messages 111" },
+          {
+            role: "agent",
+            content: "agent message 1",
+            agentName: "Agent 1",
+          },
+          {
+            role: "agent",
+            content: "agent message 2",
+            agentName: "Agent 2",
+          },
+          { role: "representative", content: "chord messages 222" },
         ]);
       } catch (error) {
         console.error(error);
       } finally {
         setIsLoading(false);
+        setUserInput("");
       }
     }
   };
 
   return (
-    <div className="flex flex-col flex-1">
-      <div className="flex flex-col p-4">
+    <div className="flex flex-col flex-1 min-h-0">
+      <div className="flex flex-col flex-1 p-4 overflow-y-auto min-h-0">
         <div className="flex flex-col space-y-2">
           {messages.map((message, index) => (
-            <div
+            <MessageBubble
               key={index}
-              className={`max-w-[70%] rounded-lg p-3 ${message.role === "user"
-                ? "bg-blue-500 text-white self-end"
-                : "bg-gray-200 text-black self-start"
-                }`}
-              dangerouslySetInnerHTML={{ __html: message.content }}
+              message={message}
+              prevRole={messages[index - 1]?.role}
             />
           ))}
+          <div ref={messagesEndRef} />
         </div>
       </div>
-      <div className="flex flex-col p-4 h-full justify-end">
+      <div className="flex flex-col p-4">
         <textarea
           className="w-full h-32 p-2 border rounded mb-4"
           placeholder="Write your prompt here..."

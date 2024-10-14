@@ -41,6 +41,16 @@ body {
   }
 }
 
+.diff-container del {
+  background-color: rgba(255, 0, 0, 0.2);
+  text-decoration: line-through;
+}
+
+.diff-container ins {
+  background-color: rgba(0, 255, 0, 0.2);
+  text-decoration: none;
+}
+
 .spinner {
   display: inline-block;
   animation: spin 1s linear infinite;

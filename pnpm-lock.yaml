@@ -35,6 +35,9 @@ importers:
       next:
         specifier: 14.2.13
         version: 14.2.13(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      node-htmldiff:
+        specifier: ^0.9.4
+        version: 0.9.4
       openai:
         specifier: ^4.64.0
         version: 4.64.0(zod@3.23.8)
@@ -1647,6 +1650,10 @@ packages:
     peerDependenciesMeta:
       encoding:
         optional: true
+
+  node-htmldiff@0.9.4:
+    resolution: {integrity: sha512-Nvnv0bcehOFsH/TD+bi4ls3iWTRQiytqII5+I1iBUypO+GFMYLcyBJfS2U3DMRSIYzfZHysaYLYoCXx6Q148Hg==}
+    hasBin: true
 
   normalize-path@3.0.0:
     resolution: {integrity: sha512-6eZs5Ls3WtCisHWp9S2GUy8dqkpGi4BVSz3GaqiE6ezub0512ESztXUwUB6C6IKbQkY2Pnb/mD4WYojCRwcwLA==}
@@ -4061,6 +4068,8 @@ snapshots:
   node-fetch@2.7.0:
     dependencies:
       whatwg-url: 5.0.0
+
+  node-htmldiff@0.9.4: {}
 
   normalize-path@3.0.0: {}
 

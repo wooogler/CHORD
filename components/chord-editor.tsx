@@ -69,7 +69,7 @@ export default function ChordEditor({
   };
 
   return (
-    <div className="grid grid-cols-[1fr_600px] h-full">
+    <div className="flex h-full">
       <WikiViewer
         content={contentHtml}
         isEditable={isEditable}
@@ -77,7 +77,7 @@ export default function ChordEditor({
         handleSelection={handleSelection}
         articleTitle={articleTitle}
       />
-      <div className="flex flex-col h-full">
+      <div className="flex flex-col h-full min-h-0 w-[500px] flex-shrink-0">
         <EditModeSwitch
           isEditable={isEditable}
           toggleEditable={toggleEditable}
