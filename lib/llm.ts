@@ -94,7 +94,8 @@ export async function editArticleWithEditingAgent({
 export async function editArticleAsPillar(
   articleHtml: string,
   agentEdit: string,
-  pillar: string
+  pillar: string,
+  personality: string,
 ) {
   try {
     const completion = await openai.chat.completions.create({
@@ -102,7 +103,7 @@ export async function editArticleAsPillar(
       messages: [
         {
           role: "system",
-          content: `Please give feedback on the edit using the concepts of this Wikipedia pillar: ${[pillar]}. Keep your responses brief and to the point.`,
+          content: `Please give feedback on the edit using the concepts of this Wikipedia pillar: ${[pillar]}. Keep your responses brief and to the point with 2 sentences or less. Respond using this personality: ${personality}`,
         },
         {
           role: "user",
