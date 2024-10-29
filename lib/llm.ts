@@ -97,29 +97,24 @@ export async function editArticleAsPillar(
   pillar: string,
   personality: string,
 ) {
-  try {
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4o",
-      messages: [
-        {
-          role: "system",
-          content: `Please give feedback on the edit using the concepts of this Wikipedia pillar: ${[pillar]}. Keep your responses brief and to the point with 2 sentences or less. Respond using this personality: ${personality}`,
-        },
-        {
-          role: "user",
-          content: `Give feedback on this edited HTML:\n${agentEdit}. This is the original HTML: \n${articleHtml}`,
-        },
-      ],
-    });
-
+  return openai.chat.completions.create({
+    model: "gpt-4o",
+    messages: [
+      {
+        role: "system",
+        content: `Please give feedback on the edit using the concepts of this Wikipedia pillar: ${[pillar]}. Keep your responses brief and to the point with 2 sentences or less. Respond using this personality: ${personality}`,
+      },
+      {
+        role: "user",
+        content: `Give feedback on this edited HTML:\n${agentEdit}. This is the original HTML: \n${articleHtml}`,
+      },
+    ],
+  }).then((data) => {
     // Ensure the edited content includes HTML tags and remove any ```html prefix
-    let cleanedContent = completion.choices[0].message.content?.trim() || "";
+    let cleanedContent = data.choices[0].message.content?.trim() || "";
     cleanedContent = cleanedContent.replace(/^```html\s*/, "");
     cleanedContent = cleanedContent.replace(/\s*```$/, "");
 
     return cleanedContent || ""
-  } catch (error) {
-    console.error("OpenAI API Error:", error);
-    throw error;
-  }
+  });
 }
