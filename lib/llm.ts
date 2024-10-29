@@ -63,7 +63,7 @@ export async function editArticleWithEditingAgent({
   userInput: string;
 }) {
   try {
-    const systemPrompt = `You are editing a part of an article in HTML format based on the user's request. Maintain the original HTML structure, including all HTML tags, while only modifying the content as specified by the user. Do not change or remove any HTML tags. Ensure that your response includes all original HTML tags. Begin your response with EDIT to indicate no rule has been broken.`;
+    const systemPrompt = `You are editing a part of an article in HTML format based on the user's request. Maintain the original HTML structure, including all HTML tags, while only modifying the content as specified by the user.`;
 
     const completion = await openai.chat.completions.create({
       model: "gpt-4o",
@@ -79,20 +79,44 @@ export async function editArticleWithEditingAgent({
       ],
     });
 
-    let editedContent = completion.choices[0].message.content;
-    console.log("editedContent", editedContent);
-    let edit = false;
-    if (editedContent?.substring(0, 4) === "EDIT") {
-      edit = true;
-      editedContent = editedContent.substring(4);
-    }
-
     // Ensure the edited content includes HTML tags and remove any ```html prefix
-    let cleanedContent = editedContent?.trim() || "";
+    let cleanedContent = completion.choices[0].message.content?.trim() || "";
     cleanedContent = cleanedContent.replace(/^```html\s*/, "");
     cleanedContent = cleanedContent.replace(/\s*```$/, "");
 
-    return { text: cleanedContent || "", edit: edit };
+    return cleanedContent || "";
+  } catch (error) {
+    console.error("OpenAI API Error:", error);
+    throw error;
+  }
+}
+
+export async function editArticleAsPillar(
+  articleHtml: string,
+  agentEdit: string,
+  pillar: string
+) {
+  try {
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [
+        {
+          role: "system",
+          content: `Please give feedback on the edit using the concepts of this Wikipedia pillar: ${[pillar]}. Keep your responses brief and to the point.`,
+        },
+        {
+          role: "user",
+          content: `Give feedback on this edited HTML:\n${agentEdit}. This is the original HTML: \n${articleHtml}`,
+        },
+      ],
+    });
+
+    // Ensure the edited content includes HTML tags and remove any ```html prefix
+    let cleanedContent = completion.choices[0].message.content?.trim() || "";
+    cleanedContent = cleanedContent.replace(/^```html\s*/, "");
+    cleanedContent = cleanedContent.replace(/\s*```$/, "");
+
+    return cleanedContent || ""
   } catch (error) {
     console.error("OpenAI API Error:", error);
     throw error;
