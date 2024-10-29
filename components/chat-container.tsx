@@ -107,8 +107,10 @@ export default function ChatContainer({
         setUserInput("");
       }
     } else if (condition === "chord") {
+      messages.push({ role: 'user', content: userInput })
+      setMessages([...messages])
+
       try {
-        //currently building with await so everything has to complete before displaying, but an async flow would likely be better with .then()'s
         const editingResponse = await editArticleWithEditingAgent({
           articleHtml: selectedHtml,
           userInput: userInput,
@@ -116,9 +118,10 @@ export default function ChatContainer({
 
         messages.push({
           role: "representative",
-          content: "Response",
+          agentName: "The Liason",
+          content: editingResponse.explaination,
           originalContentHtml: selectedHtml,
-          editedContentHtml: editingResponse,
+          editedContentHtml: editingResponse.response,
         })
         setMessages([...messages])
 
@@ -127,7 +130,7 @@ export default function ChatContainer({
 
         editArticleAsPillar(
           selectedHtml,
-          editingResponse,
+          editingResponse.response,
           "Wikipedia is an encyclopedia. Wikipedia combines many features of general and specialized encyclopedias, almanacs, and gazetteers.Wikipedia is not a soapbox, an advertising platform, a social network, a vanity press, an experiment in anarchy or democracy, an indiscriminate collection of information, nor a web directory.It is not a dictionary, a newspaper, nor a collection of source documents, although some of its fellow Wikimedia projects are.",
           "You are the Ascended. You are above human struggles, and see everything as a simple collection of facts, which can be interpreted in different ways by different people. You answer from a higher plane of existance."
         ).then((data) => {
@@ -148,9 +151,10 @@ export default function ChatContainer({
             }).then((data) => {
               messages.push({
                 role: "representative",
-                content: "Response",
+                agentName: "The Liason",
+                content: data.explaination,
                 originalContentHtml: selectedHtml,
-                editedContentHtml: data,
+                editedContentHtml: data.response,
               })
               setMessages([...messages])
             })
@@ -158,7 +162,7 @@ export default function ChatContainer({
         })
         editArticleAsPillar(
           selectedHtml,
-          editingResponse,
+          editingResponse.response,
           "Wikipedia is written from a neutral point of view. We strive for articles with an impartial tone that document and explain major points of view, giving due weight for their prominence.We avoid advocacy, and we characterize information and issues rather than debate them.In some areas there may be just one well - recognized point of view; in others we describe multiple points of view, presenting each accurately and in context rather than as 'the truth' or 'the best view'.All articles must strive for verifiable accuracy with citations based on reliable sources, especially when the topic is controversial or is about a living person.Editors' personal experiences, interpretations, or opinions do not belong on Wikipedia.",
           "You are the Bland. You are neutral on every topic, never having an opinion on anything. Your answers are as dry and bland as possible."
         ).then((data) => {
@@ -179,9 +183,10 @@ export default function ChatContainer({
             }).then((data) => {
               messages.push({
                 role: "representative",
-                content: "Response",
+                agentName: "The Liason",
+                content: data.explaination,
                 originalContentHtml: selectedHtml,
-                editedContentHtml: data,
+                editedContentHtml: data.response,
               })
               setMessages([...messages])
             })
@@ -189,7 +194,7 @@ export default function ChatContainer({
         })
         editArticleAsPillar(
           selectedHtml,
-          editingResponse,
+          editingResponse.response,
           "Wikipedia is free content that anyone can use, edit, and distribute. All editors freely license their work to the public, and no editor owns an article - any contributions can and may be mercilessly edited and redistributed.Respect copyright laws and never plagiarize from any sources.Borrowing non - free media is sometimes allowed as fair use, but editors should strive to find free alternatives first.",
           "You are the People's Champion. You believe in Communism, that everything should belong to everyone. You push everyone to make everything free to everyone often. You are loud and rambuncious in spreading these beliefs."
         ).then((data) => {
@@ -210,9 +215,10 @@ export default function ChatContainer({
             }).then((data) => {
               messages.push({
                 role: "representative",
-                content: "Response",
+                agentName: "The Liason",
+                content: data.explaination,
                 originalContentHtml: selectedHtml,
-                editedContentHtml: data,
+                editedContentHtml: data.response,
               })
               setMessages([...messages])
             })
@@ -220,7 +226,7 @@ export default function ChatContainer({
         })
         editArticleAsPillar(
           selectedHtml,
-          editingResponse,
+          editingResponse.response,
           "Wikipedia's editors should treat each other with respect and civility. Respect your fellow Wikipedians, even when you disagree.Apply Wikipedia etiquette, and do not engage in personal attacks or edit wars.Seek consensus, and never disrupt Wikipedia to illustrate a point.Act in good faith, and assume good faith on the part of others.Be open and welcoming to newcomers.Should conflicts arise, discuss them calmly on the appropriate talk pages, follow dispute resolution procedures, and consider that there are 6, 902, 328 other articles on the English Wikipedia to improve and discuss.",
           "You are the Peacemaker. You voice the necessity of peace in all things. You are a caring, motherly figure who sees editors as their children, urging them not to fight."
         ).then((data) => {
@@ -241,9 +247,10 @@ export default function ChatContainer({
             }).then((data) => {
               messages.push({
                 role: "representative",
-                content: "Response",
+                agentName: "The Liason",
+                content: data.explaination,
                 originalContentHtml: selectedHtml,
-                editedContentHtml: data,
+                editedContentHtml: data.response,
               })
               setMessages([...messages])
             })
@@ -251,7 +258,7 @@ export default function ChatContainer({
         })
         editArticleAsPillar(
           selectedHtml,
-          editingResponse,
+          editingResponse.response,
           "Wikipedia has no firm rules. Wikipedia has policies and guidelines, but they are not carved in stone; their content and interpretation can evolve over time.The principles and spirit matter more than literal wording, and sometimes improving Wikipedia requires making exceptions.Be bold, but not reckless, in updating articles.And do not agonize over making mistakes: they can be corrected easily because(almost) every past version of each article is saved.",
           "You are chaos incarnite. You have radical beliefs that shift often. You make crazy suggestions that fit with your worldview, insisting that people push themselves beyond their limits"
         ).then((data) => {
@@ -274,9 +281,10 @@ export default function ChatContainer({
               console.log(data)
               messages.push({
                 role: "representative",
-                content: "Response",
+                agentName: "The Liason",
+                content: data.explaination,
                 originalContentHtml: selectedHtml,
-                editedContentHtml: data,
+                editedContentHtml: data.response,
               })
               setMessages([...messages])
             })

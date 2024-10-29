@@ -33,12 +33,12 @@ export default function MessageBubble({
       setSpacerWidth("100%");
       timer = setTimeout(() => {
         setSpacerWidth("0%");
-      }, 1000);
+      }, 600);
     } else if (role === "representative" && prevRole === "agent") {
       setSpacerWidth("0%");
       timer = setTimeout(() => {
         setSpacerWidth("100%");
-      }, 1000);
+      }, 600);
     } else {
       setSpacerWidth(initialAlignment === "right" ? "100%" : "0%");
     }
@@ -47,15 +47,14 @@ export default function MessageBubble({
     };
   }, [role, prevRole, initialAlignment]);
 
-  const bubbleClasses = `w-full rounded-lg p-3 ${
-    role === "user"
+  const bubbleClasses = `w-full rounded-lg p-3 ${role === "user"
       ? "bg-blue-500 text-white"
       : role === "assistant"
-      ? "bg-gray-200 text-black"
-      : role === "agent"
-      ? `bg-${mapStrToColor(agentName || "Agent")}-200 text-black`
-      : "bg-gray-200 text-black"
-  }`;
+        ? "bg-gray-200 text-black"
+        : role === "agent"
+          ? `bg-${mapStrToColor(agentName || "Agent")}-200 text-black`
+          : "bg-gray-200 text-black"
+    }`;
 
   return (
     <div className={`flex w-full`}>

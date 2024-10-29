@@ -62,8 +62,11 @@ export async function editArticleWithEditingAgent({
   articleHtml: string;
   userInput: string;
 }) {
+
+  const personality = "You are the user's representative, a butler of sorts. You are the liason between the other models, and are from the upper crust, truly high class."
+
   try {
-    const systemPrompt = `You are editing a part of an article in HTML format based on the user's request. Maintain the original HTML structure, including all HTML tags, while only modifying the content as specified by the user.`;
+    const systemPrompt = `You are editing a part of an article in HTML format based on the user's request. Maintain the original HTML structure, including all HTML tags, while only modifying the content as specified by the user. Give a short justification (under 200 characters) for your edits that is seperate from the HTML by triple bars (|||). Modify these justifications based on this personality: ${personality}`;
 
     const completion = await openai.chat.completions.create({
       model: "gpt-4o",
@@ -74,17 +77,21 @@ export async function editArticleWithEditingAgent({
         },
         {
           role: "user",
-          content: `Original HTML:\n${articleHtml}\n\nUser Request: ${userInput}\n\nPlease edit the content as requested, but make sure to keep all original HTML tags intact. Your response should be valid HTML.`,
+          content: `Original HTML:\n${articleHtml}\n\nUser Request: ${userInput}\n\nPlease edit the content as requested, but make sure to keep all original HTML tags intact. Your response before the triple bars (|||) should be valid HTML.`,
         },
       ],
     });
 
+    const splitLocation = completion.choices[0].message.content?.indexOf("|||") ?? 0
+    const response = completion.choices[0].message.content?.substring(0, splitLocation)
+    const explaination = completion.choices[0].message.content?.substring(splitLocation + 3)
+
     // Ensure the edited content includes HTML tags and remove any ```html prefix
-    let cleanedContent = completion.choices[0].message.content?.trim() || "";
+    let cleanedContent = response?.trim() || "";
     cleanedContent = cleanedContent.replace(/^```html\s*/, "");
     cleanedContent = cleanedContent.replace(/\s*```$/, "");
 
-    return cleanedContent || "";
+    return { response: cleanedContent || "", explaination: explaination?.replaceAll('|', '').trim() || "" };
   } catch (error) {
     console.error("OpenAI API Error:", error);
     throw error;
@@ -102,7 +109,7 @@ export async function editArticleAsPillar(
     messages: [
       {
         role: "system",
-        content: `Please give feedback on the edit using the concepts of this Wikipedia pillar: ${[pillar]}. Keep your responses brief and to the point with 2 sentences or less. Respond using this personality: ${personality}`,
+        content: `Please give feedback on the edit using the concepts of this Wikipedia pillar: ${[pillar]}. Keep your responses brief and to the point in less than 250 characters. Respond using this personality: ${personality}`,
       },
       {
         role: "user",
