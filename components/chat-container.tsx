@@ -1,6 +1,10 @@
 "use client";
 
-import { editArticleAsPillar, editArticleWithEditingAgent, editArticleWithPrompt } from "@/lib/llm";
+import {
+  editArticleAsPillar,
+  editArticleWithEditingAgent,
+  editArticleWithUserInputAndPillars,
+} from "@/lib/llm";
 import React, { useEffect, useRef, useState } from "react";
 import MessageBubble from "./message-bubble";
 
@@ -31,8 +35,7 @@ export default function ChatContainer({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollToBottom = () => {
     if (messagesEndRef.current) {
-      messagesEndRef.current.scrollTop = messagesEndRef.current.scrollHeight
-
+      messagesEndRef.current.scrollTop = messagesEndRef.current.scrollHeight;
     }
   };
 
@@ -53,7 +56,7 @@ export default function ChatContainer({
           if (spinner) spinner.classList.remove("hidden");
         }
 
-        const response = await editArticleWithPrompt({
+        const response = await editArticleWithUserInputAndPillars({
           articleHtml: selectedHtml,
           userInput: userInput,
         });
@@ -72,8 +75,8 @@ export default function ChatContainer({
             // Create a new span element
             const newSpan = document.createElement("span");
             newSpan.className = "highlight-green";
-            if (response.edit) {
-              newSpan.innerHTML = response.text || "";
+            if (response.feedback) {
+              newSpan.innerHTML = response.editedHtml || "";
             } else {
               newSpan.innerHTML = prevContentHtml;
             }
@@ -94,9 +97,9 @@ export default function ChatContainer({
           { role: "user", content: userInput },
           {
             role: "assistant",
-            content: "Response",
+            content: response.feedback || "No feedback provided",
             originalContentHtml: selectedHtml,
-            editedContentHtml: response.text,
+            editedContentHtml: response.editedHtml,
           },
         ]);
       } catch (error) {
@@ -107,8 +110,8 @@ export default function ChatContainer({
         setUserInput("");
       }
     } else if (condition === "chord") {
-      messages.push({ role: 'user', content: userInput })
-      setMessages([...messages])
+      messages.push({ role: "user", content: userInput });
+      setMessages([...messages]);
 
       try {
         const editingResponse = await editArticleWithEditingAgent({
@@ -122,11 +125,11 @@ export default function ChatContainer({
           content: editingResponse.explaination,
           originalContentHtml: selectedHtml,
           editedContentHtml: editingResponse.response,
-        })
-        setMessages([...messages])
+        });
+        setMessages([...messages]);
 
-        const agentResponses: { [key: string]: string } = {}
-        let responses = 0
+        const agentResponses: { [key: string]: string } = {};
+        let responses = 0;
 
         editArticleAsPillar(
           selectedHtml,
@@ -138,16 +141,18 @@ export default function ChatContainer({
             role: "agent",
             content: data,
             agentName: "The Ascended", //above everything, human desires do not affect them
-          })
-          setMessages([...messages])
+          });
+          setMessages([...messages]);
 
-          agentResponses.agent1 = data
-          responses++
+          agentResponses.agent1 = data;
+          responses++;
           if (responses === 5) {
-            responses = 0
+            responses = 0;
             editArticleWithEditingAgent({
               articleHtml: selectedHtml,
-              userInput: `Your originial edit was ${editingResponse}. The agents have responded with the following feedback ${JSON.stringify(agentResponses)}. Please update your edit taking these changes into account. `,
+              userInput: `Your originial edit was ${editingResponse}. The agents have responded with the following feedback ${JSON.stringify(
+                agentResponses
+              )}. Please update your edit taking these changes into account. `,
             }).then((data) => {
               messages.push({
                 role: "representative",
@@ -155,11 +160,11 @@ export default function ChatContainer({
                 content: data.explaination,
                 originalContentHtml: selectedHtml,
                 editedContentHtml: data.response,
-              })
-              setMessages([...messages])
-            })
+              });
+              setMessages([...messages]);
+            });
           }
-        })
+        });
         editArticleAsPillar(
           selectedHtml,
           editingResponse.response,
@@ -169,17 +174,19 @@ export default function ChatContainer({
           messages.push({
             role: "agent",
             content: data,
-            agentName: "The Bland", //boring, stays neutral on every topic 
-          })
-          setMessages([...messages])
+            agentName: "The Bland", //boring, stays neutral on every topic
+          });
+          setMessages([...messages]);
 
-          agentResponses.agent2 = data
-          responses++
+          agentResponses.agent2 = data;
+          responses++;
           if (responses === 5) {
-            responses = 0
+            responses = 0;
             editArticleWithEditingAgent({
               articleHtml: selectedHtml,
-              userInput: `Your originial edit was ${editingResponse}. The agents have responded with the following feedback ${JSON.stringify(agentResponses)}. Please update your edit taking these changes into account. `,
+              userInput: `Your originial edit was ${editingResponse}. The agents have responded with the following feedback ${JSON.stringify(
+                agentResponses
+              )}. Please update your edit taking these changes into account. `,
             }).then((data) => {
               messages.push({
                 role: "representative",
@@ -187,11 +194,11 @@ export default function ChatContainer({
                 content: data.explaination,
                 originalContentHtml: selectedHtml,
                 editedContentHtml: data.response,
-              })
-              setMessages([...messages])
-            })
+              });
+              setMessages([...messages]);
+            });
           }
-        })
+        });
         editArticleAsPillar(
           selectedHtml,
           editingResponse.response,
@@ -202,16 +209,18 @@ export default function ChatContainer({
             role: "agent",
             content: data,
             agentName: "The People's Champion", //everything for the people
-          })
-          setMessages([...messages])
+          });
+          setMessages([...messages]);
 
-          agentResponses.agent3 = data
-          responses++
+          agentResponses.agent3 = data;
+          responses++;
           if (responses === 5) {
-            responses = 0
+            responses = 0;
             editArticleWithEditingAgent({
               articleHtml: selectedHtml,
-              userInput: `Your originial edit was ${editingResponse}. The agents have responded with the following feedback ${JSON.stringify(agentResponses)}. Please update your edit taking these changes into account. `,
+              userInput: `Your originial edit was ${editingResponse}. The agents have responded with the following feedback ${JSON.stringify(
+                agentResponses
+              )}. Please update your edit taking these changes into account. `,
             }).then((data) => {
               messages.push({
                 role: "representative",
@@ -219,11 +228,11 @@ export default function ChatContainer({
                 content: data.explaination,
                 originalContentHtml: selectedHtml,
                 editedContentHtml: data.response,
-              })
-              setMessages([...messages])
-            })
+              });
+              setMessages([...messages]);
+            });
           }
-        })
+        });
         editArticleAsPillar(
           selectedHtml,
           editingResponse.response,
@@ -233,17 +242,19 @@ export default function ChatContainer({
           messages.push({
             role: "agent",
             content: data,
-            agentName: "The Peacemaker",  //always preaches peace and civility
-          })
-          setMessages([...messages])
+            agentName: "The Peacemaker", //always preaches peace and civility
+          });
+          setMessages([...messages]);
 
-          agentResponses.agent4 = data
-          responses++
+          agentResponses.agent4 = data;
+          responses++;
           if (responses === 5) {
-            responses = 0
+            responses = 0;
             editArticleWithEditingAgent({
               articleHtml: selectedHtml,
-              userInput: `Your originial edit was ${editingResponse}. The agents have responded with the following feedback ${JSON.stringify(agentResponses)}. Please update your edit taking these changes into account. `,
+              userInput: `Your originial edit was ${editingResponse}. The agents have responded with the following feedback ${JSON.stringify(
+                agentResponses
+              )}. Please update your edit taking these changes into account. `,
             }).then((data) => {
               messages.push({
                 role: "representative",
@@ -251,11 +262,11 @@ export default function ChatContainer({
                 content: data.explaination,
                 originalContentHtml: selectedHtml,
                 editedContentHtml: data.response,
-              })
-              setMessages([...messages])
-            })
+              });
+              setMessages([...messages]);
+            });
           }
-        })
+        });
         editArticleAsPillar(
           selectedHtml,
           editingResponse.response,
@@ -266,31 +277,32 @@ export default function ChatContainer({
             role: "agent",
             content: data,
             agentName: "The Chaos", //breaks the rules when needed
-          })
-          setMessages([...messages])
+          });
+          setMessages([...messages]);
 
-          agentResponses.agent5 = data
-          responses++
+          agentResponses.agent5 = data;
+          responses++;
           if (responses === 5) {
-            responses = 0
+            responses = 0;
             editArticleWithEditingAgent({
               articleHtml: selectedHtml,
-              userInput: `Your originial edit was ${editingResponse}. The agents have responded with the following feedback ${JSON.stringify(agentResponses)}. Please update your edit taking these changes into account. `,
+              userInput: `Your originial edit was ${editingResponse}. The agents have responded with the following feedback ${JSON.stringify(
+                agentResponses
+              )}. Please update your edit taking these changes into account. `,
             }).then((data) => {
-              console.log(agentResponses)
-              console.log(data)
+              console.log(agentResponses);
+              console.log(data);
               messages.push({
                 role: "representative",
                 agentName: "The Liason",
                 content: data.explaination,
                 originalContentHtml: selectedHtml,
                 editedContentHtml: data.response,
-              })
-              setMessages([...messages])
-            })
+              });
+              setMessages([...messages]);
+            });
           }
-        })
-
+        });
       } catch (error) {
         console.error(error);
       } finally {
@@ -302,7 +314,10 @@ export default function ChatContainer({
 
   return (
     <div className="flex flex-col flex-1 min-h-0">
-      <div className="flex flex-col flex-1 p-4 overflow-y-auto min-h-0" ref={messagesEndRef}>
+      <div
+        className="flex flex-col flex-1 p-4 overflow-y-auto min-h-0"
+        ref={messagesEndRef}
+      >
         <div className="flex flex-col space-y-2">
           {messages.map((message, index) => (
             <MessageBubble
