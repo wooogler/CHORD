@@ -9,6 +9,7 @@ import {
 import React, { useEffect, useRef, useState } from "react";
 import htmldiff from "node-htmldiff";
 import MessageBubble from "./message-bubble";
+import { cleanDiffHtml } from "@/lib/utils";
 
 export type MessageRole = "user" | "assistant" | "representative" | "agent";
 export type Message = {
@@ -130,7 +131,9 @@ export default function ChatContainer({
         });
         setMessages([...messages]);
 
-        const diffHtml = htmldiff(selectedHtml, editingResponse.editedHtml);
+        const editedHtml = cleanDiffHtml(
+          htmldiff(selectedHtml, editingResponse.editedHtml)
+        );
 
         const agentResponses: { [key: string]: string } = {};
         let responses = 0;

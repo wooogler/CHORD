@@ -1,4 +1,4 @@
-import { mapStrToColor } from "@/lib/utils";
+import { cleanDiffHtml, mapStrToColor } from "@/lib/utils";
 import { Message, MessageRole } from "./chat-container";
 import { useEffect, useState } from "react";
 import htmldiff from "node-htmldiff";
@@ -13,7 +13,11 @@ export default function MessageBubble({
   const { role, content, originalContentHtml, editedContentHtml, agentName } =
     message;
 
-  const diffHtml = htmldiff(originalContentHtml || "", editedContentHtml || "", null);
+  const diffHtml = htmldiff(
+    originalContentHtml || "",
+    editedContentHtml || "",
+    null
+  );
 
   let initialAlignment: "left" | "right";
 
@@ -47,14 +51,15 @@ export default function MessageBubble({
     };
   }, [role, prevRole, initialAlignment]);
 
-  const bubbleClasses = `w-full rounded-lg p-3 ${role === "user"
+  const bubbleClasses = `w-full rounded-lg p-3 ${
+    role === "user"
       ? "bg-blue-500 text-white"
       : role === "assistant"
-        ? "bg-gray-200 text-black"
-        : role === "agent"
-          ? `bg-${mapStrToColor(agentName || "Agent")}-200 text-black`
-          : "bg-gray-200 text-black"
-    }`;
+      ? "bg-gray-200 text-black"
+      : role === "agent"
+      ? `bg-${mapStrToColor(agentName || "Agent")}-200 text-black`
+      : "bg-gray-200 text-black"
+  }`;
 
   return (
     <div className={`flex w-full`}>

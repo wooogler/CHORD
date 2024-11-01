@@ -33,16 +33,18 @@ export function mapStrToColor(str: string) {
 }
 
 export function cleanDiffHtml(htmlString: string) {
-  const $ = cheerio.load(htmlString);
-  $("sup").remove();
+  const $ = cheerio.load(htmlString, null, false);
 
-  $("ins, del").each((_, el) => {
-    $(el).text(
-      $(el)
-        .text()
-        .replace(/<[^>]*>?/g, "")
-    );
+  $("*").each((_, element) => {
+    if ("tagName" in element) {
+      const tag = element.tagName;
+      if (tag !== "ins" && tag !== "del") {
+        $(element).replaceWith($(element).text());
+      }
+    }
   });
+
+  $("*[data-operation-index]").removeAttr("data-operation-index");
   return $.html();
 }
 

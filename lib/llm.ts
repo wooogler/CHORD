@@ -1,5 +1,6 @@
 "use server";
 
+import { Message } from "@/components/chat-container";
 import OpenAI from "openai";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
@@ -197,4 +198,49 @@ export async function editArticleAsPillar(
 
       return cleanedContent || "";
     });
+}
+
+export async function getFeedbackFromAgent(
+  editedHtml: string,
+  task: string,
+  personality: string,
+  chatHistory: Message[]
+) {
+  const completion = await openai.chat.completions.create({
+    model: "gpt-4o",
+    messages: [
+      {
+        role: "system",
+        content: `You are an AI assistant tasked with providing brief feedback on edited content. The edits are marked with <del> (deleted) and <ins> (inserted). Base your feedback on the given task and the previous conversation history. Your response should reflect the personality described and be concise, as if leaving a comment in a group chat.`,
+      },
+      {
+        role: "user",
+        content: `Edited HTML Content:
+${editedHtml}
+
+Task:
+${task}
+
+Personality:
+${personality}
+
+Previous Conversation:
+${formatChatHistory(chatHistory)}
+
+Please provide your feedback on the edited content.`,
+      },
+    ],
+  });
+
+  const agentResponse = completion.choices[0].message.content;
+
+  return agentResponse;
+}
+
+function formatChatHistory(chatHistory: Message[]) {
+  return chatHistory
+    .map(
+      (message) => `${message.agentName || message.role}: ${message.content}`
+    )
+    .join("\n");
 }
