@@ -1,3 +1,4 @@
+import { cleanWikiHtml } from "@/lib/utils";
 import React, { useCallback, useEffect } from "react";
 import ContentEditable, { ContentEditableEvent } from "react-contenteditable";
 
@@ -54,7 +55,7 @@ const WikiViewer: React.FC<WikiViewerProps> = ({
       <ContentEditable
         className="p-4 focus:outline-none"
         id="prompt-editor-content"
-        html={content}
+        html={cleanWikiHtml(content)}
         disabled={!isEditable}
         onChange={(evt: ContentEditableEvent) => handleChange?.(evt)}
         onMouseUp={handleSelection}

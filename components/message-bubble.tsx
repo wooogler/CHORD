@@ -13,7 +13,7 @@ export default function MessageBubble({
   const { role, content, originalContentHtml, editedContentHtml, agentName } =
     message;
 
-  const diffHtml = htmldiff(originalContentHtml || "", editedContentHtml || "");
+  const diffHtml = htmldiff(originalContentHtml || "", editedContentHtml || "", null);
 
   let initialAlignment: "left" | "right";
 

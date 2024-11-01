@@ -1,5 +1,6 @@
 import clsx, { ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
+import * as cheerio from "cheerio";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -29,4 +30,24 @@ export function mapStrToColor(str: string) {
   }
   const index = Math.abs(hash) % colors.length;
   return colors[index];
+}
+
+export function cleanDiffHtml(htmlString: string) {
+  const $ = cheerio.load(htmlString);
+  $("sup").remove();
+
+  $("ins, del").each((_, el) => {
+    $(el).text(
+      $(el)
+        .text()
+        .replace(/<[^>]*>?/g, "")
+    );
+  });
+  return $.html();
+}
+
+export function cleanWikiHtml(htmlString: string) {
+  const $ = cheerio.load(htmlString);
+  $("sup").remove();
+  return $.html();
 }
