@@ -211,7 +211,7 @@ export async function getFeedbackFromAgent(
     messages: [
       {
         role: "system",
-        content: `You are an AI assistant tasked with providing brief feedback on edited content. The edits are marked with <del> (deleted) and <ins> (inserted). Base your feedback on the given task and the previous conversation history. Your response should reflect the personality described and be concise, as if leaving a comment in a group chat.`,
+        content: `You are an AI assistant providing ultra-concise feedback (max 100 characters) on edited content marked with <del> and <ins> tags. Match the given personality and be casual like in a group chat.`,
       },
       {
         role: "user",
