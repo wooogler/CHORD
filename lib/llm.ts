@@ -204,18 +204,18 @@ export async function getFeedbackFromAgent(
   editedHtml: string,
   task: string,
   personality: string,
-  chatHistory: Message[]
+  chatHistory?: Message[]
 ) {
   const completion = await openai.chat.completions.create({
     model: "gpt-4o",
     messages: [
       {
         role: "system",
-        content: `You are an AI assistant providing ultra-concise feedback (max 100 characters) on edited content marked with <del> and <ins> tags. Match the given personality and be casual like in a group chat.`,
+        content: `You are an AI assistant providing ultra-concise feedback (max 100 characters) on edited content. Match the given personality and be casual like in a group chat.`,
       },
       {
         role: "user",
-        content: `Edited HTML Content:
+        content: `Edited Content:
 ${editedHtml}
 
 Task:
@@ -224,8 +224,12 @@ ${task}
 Personality:
 ${personality}
 
-Previous Conversation:
-${formatChatHistory(chatHistory)}
+${
+  chatHistory
+    ? `Chat History:
+${formatChatHistory(chatHistory)}`
+    : ""
+}
 
 Please provide your feedback on the edited content.`,
       },
@@ -239,8 +243,59 @@ Please provide your feedback on the edited content.`,
 
 function formatChatHistory(chatHistory: Message[]) {
   return chatHistory
-    .map(
-      (message) => `${message.agentName || message.role}: ${message.content}`
-    )
+    .map((message) => `${message.role}: ${message.content}`)
     .join("\n");
+}
+
+export async function editArticleWithConversation({
+  articleHtml,
+  conversation,
+}: {
+  articleHtml: string;
+  conversation: Message[];
+}) {
+  try {
+    const systemPrompt = `You are editing a part of a Wikipedia article in HTML format based on the conversation between a user and an agent. Consider the entire context of their discussion to make appropriate edits. Maintain the original HTML structure, including all HTML tags, while only modifying the content based on the conversation context. Do not change or remove any HTML tags. Ensure that your response includes all original HTML tags. Provide your response in the following JSON format:
+
+{
+  "feedback": "{Your natural language feedback explaining the changes made based on the conversation}",
+  "editedHtml": "{The edited part in HTML format}"
+}`;
+
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o",
+      temperature: 0,
+      response_format: { type: "json_object" },
+      messages: [
+        {
+          role: "system",
+          content: systemPrompt,
+        },
+        {
+          role: "user",
+          content: `Original HTML:\n${articleHtml}\n\nConversation History:\n${formatChatHistory(
+            conversation
+          )}\n\nPlease edit the content based on the conversation context while keeping all original HTML tags intact. Your response should be valid HTML.`,
+        },
+      ],
+    });
+
+    const assistantResponse = completion.choices[0].message.content;
+
+    let parsedResponse;
+    try {
+      parsedResponse = JSON.parse(assistantResponse || "");
+    } catch (error) {
+      console.error("Error parsing JSON:", error);
+      throw error;
+    }
+
+    return {
+      feedback: parsedResponse.feedback,
+      editedHtml: parsedResponse.editedHtml,
+    };
+  } catch (error) {
+    console.error("OpenAI API Error:", error);
+    throw error;
+  }
 }

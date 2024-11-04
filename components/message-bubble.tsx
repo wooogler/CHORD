@@ -6,10 +6,19 @@ import htmldiff from "node-htmldiff";
 export default function MessageBubble({
   message,
   prevRole,
+  setActiveAgent,
+  activeAgent,
+  setContentHtml,
+  isLastEditMessage,
 }: {
   message: Message;
   prevRole?: MessageRole;
+  setActiveAgent: (agentName: string) => void;
+  activeAgent: string | null;
+  setContentHtml: (value: React.SetStateAction<string>) => void;
+  isLastEditMessage: boolean;
 }) {
+  const [isChangesApplied, setIsChangesApplied] = useState(false);
   const { role, content, originalContentHtml, editedContentHtml, agentName } =
     message;
 
@@ -51,15 +60,53 @@ export default function MessageBubble({
     };
   }, [role, prevRole, initialAlignment]);
 
-  const bubbleClasses = `w-full rounded-lg p-3 ${
-    role === "user"
-      ? "bg-blue-500 text-white"
-      : role === "assistant"
-      ? "bg-gray-200 text-black"
-      : role === "agent"
-      ? `bg-${mapStrToColor(agentName || "Agent")}-200 text-black`
-      : "bg-gray-200 text-black"
-  }`;
+  const getBubbleColorClasses = (
+    role: MessageRole,
+    activeAgent: string | null,
+    agentName?: string
+  ) => {
+    if (role === "representative" || role === "assistant")
+      return "bg-gray-200 text-black";
+    else if (role === "user") return "bg-blue-500 text-white";
+    else if (role === "agent") {
+      if (activeAgent) return "bg-white text-black";
+      else return `bg-${mapStrToColor(agentName || "Agent")}-200 text-black`;
+    }
+  };
+
+  const bubbleClasses = `w-full rounded-lg p-3 ${getBubbleColorClasses(
+    role,
+    message.activeAgent || null,
+    agentName
+  )}`;
+
+  const applyChanges = () => {
+    setContentHtml((prevContentHtml: string) => {
+      // Create a temporary DOM element
+      const tempDiv = document.createElement("div");
+      tempDiv.innerHTML = prevContentHtml;
+
+      // Find the span element with the highlight-yellow class
+      const highlightedSpan = tempDiv.querySelector("span.highlight-yellow");
+
+      if (highlightedSpan) {
+        // Create a new span element
+        const newSpan = document.createElement("span");
+        newSpan.className = "highlight-green";
+        newSpan.innerHTML = message.editedContentHtml || prevContentHtml;
+
+        // Replace the existing element with the new one
+        highlightedSpan.parentNode?.replaceChild(newSpan, highlightedSpan);
+
+        // Return the modified HTML
+        return tempDiv.innerHTML;
+      }
+
+      // If no matching element is found, return the original content
+      return prevContentHtml;
+    });
+    setIsChangesApplied(true);
+  };
 
   return (
     <div className={`flex w-full`}>
@@ -74,21 +121,49 @@ export default function MessageBubble({
 
       <div className="max-w-[70%] flex-shrink-0">
         {agentName && (
-          <div
-            className={`text-xs text-${mapStrToColor(
-              agentName || "Agent"
-            )}-600 mb-1`}
-          >
-            {agentName}
+          <div className="flex">
+            <div
+              className={`text-xs text-${mapStrToColor(
+                agentName || "Agent"
+              )}-600 mb-1`}
+            >
+              {agentName}
+            </div>
+            {activeAgent === null && role === "agent" && agentName && (
+              <div
+                onClick={() => setActiveAgent(agentName)}
+                className="text-xs text-gray-500 font-bold cursor-pointer ml-2"
+              >
+                Reply
+              </div>
+            )}
           </div>
         )}
         <div className={bubbleClasses}>
           <div>{content}</div>
           {originalContentHtml && (
-            <div
-              className="diff-container bg-white p-2 rounded-lg mt-2"
-              dangerouslySetInnerHTML={{ __html: diffHtml }}
-            />
+            <div className=" bg-white p-2 rounded-lg mt-2">
+              <div
+                className="diff-container"
+                dangerouslySetInnerHTML={{ __html: diffHtml }}
+              />
+              {!isChangesApplied && isLastEditMessage && (
+                <div className="flex mt-2">
+                  <button
+                    className="text-blue-600 text-xs"
+                    onClick={applyChanges}
+                  >
+                    Apply Changes
+                  </button>
+                  <button
+                    className="text-red-600 text-xs ml-2"
+                    onClick={() => setIsChangesApplied(true)}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              )}
+            </div>
           )}
         </div>
       </div>

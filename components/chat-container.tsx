@@ -2,6 +2,7 @@
 
 import {
   editArticleAsPillar,
+  editArticleWithConversation,
   editArticleWithEditingAgent,
   editArticleWithUserInputAndPillars,
   editArticleWithUserInputOnly,
@@ -10,7 +11,7 @@ import {
 import React, { useEffect, useRef, useState } from "react";
 import htmldiff from "node-htmldiff";
 import MessageBubble from "./message-bubble";
-import { cleanDiffHtml } from "@/lib/utils";
+import { cleanDiffHtml, mapStrToColor } from "@/lib/utils";
 import agentProfiles from "@/lib/agentProfiles";
 export type MessageRole = "user" | "assistant" | "representative" | "agent";
 export type Message = {
@@ -19,6 +20,7 @@ export type Message = {
   originalContentHtml?: string;
   editedContentHtml?: string;
   agentName?: string;
+  activeAgent?: string | null;
 };
 
 export default function ChatContainer({
@@ -35,8 +37,8 @@ export default function ChatContainer({
   const [messages, setMessages] = useState<Message[]>([]);
   const [userInput, setUserInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [isPaused, setIsPaused] = useState(false);
   const [editedHtml, setEditedHtml] = useState("");
+  const [activeAgent, setActiveAgent] = useState<string | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollToBottom = () => {
@@ -46,217 +48,257 @@ export default function ChatContainer({
   };
 
   useEffect(() => {
-    if (isPaused) return;
-
-    const lastMessage = messages[messages.length - 1];
-    if (
-      lastMessage &&
-      (lastMessage.role === "user" || lastMessage.role === "agent")
-    ) {
-      const currentSessionId = sessionIdRef.current;
-      getAgentFeedbacks(currentSessionId, editedHtml);
-    }
-  }, [messages]);
-
-  useEffect(() => {
     scrollToBottom();
   }, [messages]);
 
-  const sessionIdRef = useRef(0);
-  const messagesRef = useRef<Message[]>([]);
-  messagesRef.current = messages;
-
-  const handlePause = () => {
-    setIsPaused((prev) => !prev);
-  };
-
-  const handleSubmit = async () => {
+  const handleSubmitPrompt = async () => {
     if (!userInput) return;
 
     setIsLoading(true);
 
-    if (condition === "prompt") {
-      try {
-        // Show spinner
-        const highlightedSpan = document.querySelector(".highlight-yellow");
-        if (highlightedSpan) {
-          const spinner = highlightedSpan.querySelector(".spinner");
-          if (spinner) spinner.classList.remove("hidden");
-        }
+    setMessages((prevMessages) => {
+      const newMessages = [
+        ...prevMessages,
+        { role: "user" as MessageRole, content: userInput },
+      ];
+      return newMessages;
+    });
 
-        const response = await editArticleWithUserInputAndPillars({
-          articleHtml: selectedHtml,
-          userInput: userInput,
-        });
-
-        setContentHtml((prevContentHtml: string) => {
-          // Create a temporary DOM element
-          const tempDiv = document.createElement("div");
-          tempDiv.innerHTML = prevContentHtml;
-
-          // Find the span element with the highlight-yellow class
-          const highlightedSpan = tempDiv.querySelector(
-            "span.highlight-yellow"
-          );
-
-          if (highlightedSpan) {
-            // Create a new span element
-            const newSpan = document.createElement("span");
-            newSpan.className = "highlight-green";
-            if (response.feedback) {
-              newSpan.innerHTML = response.editedHtml || "";
-            } else {
-              newSpan.innerHTML = prevContentHtml;
-            }
-
-            // Replace the existing element with the new one
-            highlightedSpan.parentNode?.replaceChild(newSpan, highlightedSpan);
-
-            // Return the modified HTML
-            return tempDiv.innerHTML;
-          }
-
-          // If no matching element is found, return the original content
-          return prevContentHtml;
-        });
-
-        setMessages([
-          ...messages,
-          { role: "user", content: userInput },
-          {
-            role: "assistant",
-            content: response.feedback || "No feedback provided",
-            originalContentHtml: selectedHtml,
-            editedContentHtml: response.editedHtml,
-          },
-        ]);
-      } catch (error) {
-        console.error(error);
-      } finally {
-        setIsLoading(false);
-        setSelectedHtml("");
-        setUserInput("");
+    try {
+      // Show spinner
+      const highlightedSpan = document.querySelector(".highlight-yellow");
+      if (highlightedSpan) {
+        const spinner = highlightedSpan.querySelector(".spinner");
+        if (spinner) spinner.classList.remove("hidden");
       }
-    } else if (condition === "chord") {
-      setIsLoading(true);
-      sessionIdRef.current += 1;
-      const currentSessionId = sessionIdRef.current;
-      const userMessage: Message = {
-        role: "user",
-        content: userInput,
-      };
-      setMessages((prevMessages) => {
-        const newMessages = [...prevMessages, userMessage];
-        messagesRef.current = newMessages;
-        return newMessages;
+
+      const response = await editArticleWithUserInputOnly({
+        articleHtml: selectedHtml,
+        userInput: userInput,
       });
 
+      const assistantMessage: Message = {
+        role: "assistant",
+        content: response.feedback || "No feedback provided",
+        originalContentHtml: selectedHtml,
+        editedContentHtml: response.editedHtml,
+      };
+
+      setMessages((prevMessages) => {
+        const newMessages = [...prevMessages, assistantMessage];
+        return newMessages;
+      });
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsLoading(false);
+      setSelectedHtml("");
       setUserInput("");
-
-      try {
-        const editingResponse = await editArticleWithUserInputOnly({
-          articleHtml: selectedHtml,
-          userInput: userInput,
-        });
-
-        const representativeMessage: Message = {
-          role: "representative",
-          agentName: "The Liason",
-          content: editingResponse.feedback,
-          originalContentHtml: selectedHtml,
-          editedContentHtml: editingResponse.editedHtml,
-        };
-
-        setMessages((prevMessages) => {
-          const newMessages = [...prevMessages, representativeMessage];
-          messagesRef.current = newMessages;
-          return newMessages;
-        });
-
-        const editedHtml = cleanDiffHtml(
-          htmldiff(selectedHtml, editingResponse.editedHtml)
-        );
-
-        setEditedHtml(editedHtml);
-
-        getAgentFeedbacks(currentSessionId, editedHtml);
-      } catch (error) {
-        console.error(error);
-      } finally {
-        setIsLoading(false);
-        setUserInput("");
-      }
     }
   };
 
-  const getAgentFeedbacks = async (
-    currentSessionId: number,
-    editedHtml: string
-  ) => {
-    const agents = agentProfiles;
-    const agentPromises = agents.map(async (agentProfile) => {
-      if (sessionIdRef.current !== currentSessionId) return null;
+  const handleSubmitSuggestion = async () => {
+    if (!userInput) return;
 
+    setIsLoading(true);
+    const userMessage: Message = {
+      role: "user",
+      content: userInput,
+    };
+    setMessages((prevMessages) => {
+      const newMessages = [...prevMessages, userMessage];
+      return newMessages;
+    });
+
+    setUserInput("");
+
+    try {
+      const editingResponse = await editArticleWithUserInputOnly({
+        articleHtml: selectedHtml,
+        userInput: userInput,
+      });
+
+      const representativeMessage: Message = {
+        role: "representative",
+        agentName: "The Liason",
+        content: editingResponse.feedback,
+        originalContentHtml: selectedHtml,
+        editedContentHtml: editingResponse.editedHtml,
+      };
+
+      setMessages((prevMessages) => {
+        const newMessages = [...prevMessages, representativeMessage];
+        return newMessages;
+      });
+
+      const cleanedEditedHtml = cleanDiffHtml(
+        htmldiff(selectedHtml, editingResponse.editedHtml)
+      );
+
+      setEditedHtml(editingResponse.editedHtml);
+
+      getFirstFeedbackFromAgents(cleanedEditedHtml);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsLoading(false);
+      setUserInput("");
+    }
+  };
+
+  const getFirstFeedbackFromAgents = async (editedHtml: string) => {
+    const agents = agentProfiles;
+
+    // 모든 에이전트에게 동시에 요청
+    const agentPromises = agents.map(async (agentProfile) => {
       const { agentName, task, personality } = agentProfile;
-      const chatHistory = messagesRef.current;
 
       try {
         const agentResponse = await getFeedbackFromAgent(
           editedHtml,
           task,
-          personality,
-          chatHistory
+          personality
         );
 
-        if (sessionIdRef.current !== currentSessionId) return null;
-
-        return {
-          agentName,
+        // 각 응답이 오면 바로 메시지에 추가
+        const agentMessage: Message = {
+          role: "agent",
+          agentName: agentName,
           content: agentResponse || "",
-          timestamp: Date.now(),
         };
+
+        setMessages((prevMessages) => {
+          const newMessages = [...prevMessages, agentMessage];
+          return newMessages;
+        });
       } catch (error) {
         console.error(error);
       }
     });
 
-    const agentResponses = await Promise.all(agentPromises);
+    // 모든 응답이 완료될 때까지 기다림
+    await Promise.all(agentPromises);
+    setIsLoading(false);
+  };
 
-    if (sessionIdRef.current !== currentSessionId) {
-      return;
+  const handleSubmitReply = async () => {
+    setUserInput("");
+
+    const updatedMessages = [...messages];
+
+    const latestMessageFromActiveAgent = messages.findLast(
+      (message) => message.agentName === activeAgent
+    );
+    console.log("latestMessageFromActiveAgent", latestMessageFromActiveAgent);
+
+    if (
+      latestMessageFromActiveAgent &&
+      !latestMessageFromActiveAgent.activeAgent
+    ) {
+      const newAgentMessage = {
+        activeAgent: activeAgent,
+        ...latestMessageFromActiveAgent,
+      };
+      updatedMessages.push(newAgentMessage);
     }
 
-    const validResponses = agentResponses.filter((res) => res !== null);
+    const userMessage: Message = {
+      role: "user",
+      content: userInput,
+      activeAgent: activeAgent,
+    };
+    updatedMessages.push(userMessage);
 
-    if (validResponses.length === 0) {
+    setMessages(updatedMessages);
+
+    setIsLoading(true);
+
+    const agentProfile = agentProfiles.find(
+      (agent) => agent.agentName === activeAgent
+    );
+    try {
+      const latestMessagesWithActiveAgent = updatedMessages.reduceRight(
+        (acc: Message[], curr) => {
+          if (acc.length === 0 && curr.activeAgent === activeAgent) {
+            return [curr];
+          }
+          if (acc.length > 0 && curr.activeAgent === activeAgent) {
+            return [curr, ...acc];
+          }
+          if (acc.length > 0) {
+            return acc;
+          }
+          return [];
+        },
+        []
+      );
+
+      const response = await getFeedbackFromAgent(
+        editedHtml,
+        agentProfile?.task || "",
+        agentProfile?.personality || "",
+        latestMessagesWithActiveAgent
+      );
+      setMessages((prevMessages) => {
+        const newMessages = [
+          ...prevMessages,
+          {
+            role: "agent" as MessageRole,
+            agentName: activeAgent || "Agent",
+            content: response || "",
+            activeAgent: activeAgent,
+          },
+        ];
+        return newMessages;
+      });
+    } catch (error) {
+      console.error(error);
+    } finally {
       setIsLoading(false);
-      return;
     }
+  };
 
-    const longestResponse = validResponses.reduce((longest, current) => {
-      if (!current) return longest;
-      return longest && longest.content.length > current.content.length
-        ? longest
-        : current;
-    }, validResponses[0]);
+  const handleEditWithActiveAgent = async () => {
+    setActiveAgent(null);
+    const latestMessagesWithActiveAgent = messages.reduceRight(
+      (acc: Message[], curr) => {
+        if (acc.length === 0 && curr.activeAgent === activeAgent) {
+          return [curr];
+        }
+        if (acc.length > 0 && curr.activeAgent === activeAgent) {
+          return [curr, ...acc];
+        }
+        if (acc.length > 0) {
+          return acc;
+        }
+        return [];
+      },
+      []
+    );
 
-    const delay = (longestResponse?.content.length || 0) * 100;
-    console.log("delay: ", delay);
-    await new Promise((resolve) => setTimeout(resolve, delay));
+    const editingResponse = await editArticleWithConversation({
+      articleHtml: editedHtml,
+      conversation: latestMessagesWithActiveAgent,
+    });
 
-    const agentMessage: Message = {
-      role: "agent",
-      agentName: longestResponse?.agentName || "Unknown Agent",
-      content: longestResponse?.content || "",
+    const representativeMessage: Message = {
+      role: "representative",
+      agentName: "The Liason",
+      content: editingResponse.feedback,
+      originalContentHtml: editedHtml,
+      editedContentHtml: editingResponse.editedHtml,
     };
 
     setMessages((prevMessages) => {
-      const newMessages = [...prevMessages, agentMessage];
-      messagesRef.current = newMessages;
+      const newMessages = [...prevMessages, representativeMessage];
       return newMessages;
     });
 
-    setIsLoading(false);
+    const newEditedHtml = cleanDiffHtml(
+      htmldiff(selectedHtml, editingResponse.editedHtml)
+    );
+
+    setEditedHtml(newEditedHtml);
   };
 
   return (
@@ -265,50 +307,134 @@ export default function ChatContainer({
         className="flex flex-col flex-1 p-4 overflow-y-auto min-h-0"
         ref={messagesEndRef}
       >
-        <div className="flex flex-col space-y-2">
-          {messages.map((message, index) => (
-            <MessageBubble
-              key={index}
-              message={message}
-              prevRole={messages[index - 1]?.role}
-            />
-          ))}
+        <div className="flex flex-col">
+          {messages.map((message, index) => {
+            const editMessages = messages.filter(
+              (msg) => msg.editedContentHtml
+            );
+            const lastEditMessage = editMessages[editMessages.length - 1];
+
+            return (
+              <div
+                key={index}
+                className={
+                  message.activeAgent
+                    ? `bg-${mapStrToColor(message.activeAgent)}-200 p-4`
+                    : "mb-4"
+                }
+              >
+                <MessageBubble
+                  message={message}
+                  prevRole={messages[index - 1]?.role}
+                  setActiveAgent={setActiveAgent}
+                  activeAgent={message.activeAgent || null}
+                  setContentHtml={setContentHtml}
+                  isLastEditMessage={message === lastEditMessage}
+                />
+              </div>
+            );
+          })}
         </div>
       </div>
-      <div className="flex flex-col p-4">
-        <textarea
-          className="w-full h-32 p-2 border rounded mb-4"
-          placeholder="Write your prompt here..."
-          value={userInput}
-          onChange={(e) => setUserInput(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.code === "Enter") {
-              handleSubmit();
-              e.preventDefault();
-            }
-          }}
-          disabled={isLoading}
-        />
-        <div className="flex items-center space-x-2">
-          <button
-            onClick={handleSubmit}
-            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 flex items-center justify-center flex-1 h-10"
+
+      {condition === "prompt" ? (
+        <div className={`flex flex-col p-4 `}>
+          <textarea
+            className="w-full h-32 p-2 border rounded mb-4"
+            placeholder="Write your prompt here..."
+            value={userInput}
+            onChange={(e) => setUserInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.code === "Enter") {
+                handleSubmitPrompt();
+                e.preventDefault();
+              }
+            }}
             disabled={isLoading}
-          >
-            {isLoading ? (
-              <span className="inline-block animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white"></span>
-            ) : (
-              "Submit"
-            )}
-          </button>
-          <button
-            onClick={handlePause}
-            className="ml-2 bg-gray-500 text-white px-2 py-1 rounded hover:bg-gray-600 h-10"
-          >
-            {isPaused ? "Resume" : "Pause"}
-          </button>
+          />
+          <div className={`flex items-center space-x-2`}>
+            <button
+              onClick={handleSubmitPrompt}
+              className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 flex items-center justify-center flex-1 h-10"
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <span className="inline-block animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white"></span>
+              ) : (
+                "Submit"
+              )}
+            </button>
+          </div>
         </div>
-      </div>
+      ) : (
+        <div
+          className={`flex flex-col p-4 rounded-lg ${
+            activeAgent ? `bg-${mapStrToColor(activeAgent)}-200` : ""
+          }`}
+        >
+          <textarea
+            className="w-full h-32 p-2 border rounded mb-4"
+            placeholder="Write your suggestion here..."
+            value={userInput}
+            onChange={(e) => setUserInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.code === "Enter") {
+                if (activeAgent) {
+                  handleSubmitReply();
+                } else {
+                  handleSubmitSuggestion();
+                }
+                e.preventDefault();
+              }
+            }}
+            disabled={isLoading}
+          />
+
+          {activeAgent ? (
+            <div className={`flex items-center space-x-2`}>
+              <button
+                onClick={handleSubmitReply}
+                className={`text-white px-4 py-2 rounded flex font-bold items-center justify-center flex-1 h-10 bg-${mapStrToColor(
+                  activeAgent
+                )}-600`}
+              >
+                {isLoading ? (
+                  <span className="inline-block animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white"></span>
+                ) : (
+                  `Reply to ${activeAgent}`
+                )}
+              </button>
+              {messages[messages.length - 1].activeAgent === null ? (
+                <button
+                  className="text-white px-4 py-2 rounded bg-red-600 font-bold w-20"
+                  onClick={() => setActiveAgent(null)}
+                >
+                  Cancel
+                </button>
+              ) : (
+                <button
+                  className="text-white px-4 py-2 rounded bg-blue-600 font-bold w-20"
+                  onClick={handleEditWithActiveAgent}
+                >
+                  Edit
+                </button>
+              )}
+            </div>
+          ) : (
+            <button
+              onClick={handleSubmitSuggestion}
+              className="bg-blue-600 text-white px-4 py-2 rounded flex items-center justify-center flex-1 h-10"
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <span className="inline-block animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white"></span>
+              ) : (
+                "Submit"
+              )}
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 }

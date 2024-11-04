@@ -24,6 +24,14 @@ const config: Config = {
       pattern:
         /text-(red|green|yellow|pink|purple|indigo|teal|stone|amber|orange|lime|emerald|cyan|sky|violet|fuchsia|rose)-600/,
     },
+    {
+      pattern:
+        /bg-(red|green|yellow|pink|purple|indigo|teal|stone|amber|orange|lime|emerald|cyan|sky|violet|fuchsia|rose)-200/,
+    },
+    {
+      pattern:
+        /bg-(red|green|yellow|pink|purple|indigo|teal|stone|amber|orange|lime|emerald|cyan|sky|violet|fuchsia|rose)-600/,
+    },
   ],
 };
 export default config;
