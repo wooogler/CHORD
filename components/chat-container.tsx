@@ -38,6 +38,7 @@ export default function ChatContainer({
   const [userInput, setUserInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [editedHtml, setEditedHtml] = useState("");
+  const [cleanedEditedHtml, setCleanedEditedHtml] = useState("");
   const [activeAgent, setActiveAgent] = useState<string | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -134,6 +135,8 @@ export default function ChatContainer({
       const cleanedEditedHtml = cleanDiffHtml(
         htmldiff(selectedHtml, editingResponse.editedHtml)
       );
+
+      setCleanedEditedHtml(cleanedEditedHtml);
 
       setEditedHtml(editingResponse.editedHtml);
 
@@ -234,7 +237,7 @@ export default function ChatContainer({
       );
 
       const response = await getFeedbackFromAgent(
-        editedHtml,
+        cleanedEditedHtml,
         agentProfile?.task || "",
         agentProfile?.personality || "",
         latestMessagesWithActiveAgent
