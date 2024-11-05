@@ -259,10 +259,10 @@ export async function editArticleWithConversation({
   conversation: Message[];
 }) {
   try {
-    const systemPrompt = `You are editing a part of a Wikipedia article in HTML format based on the conversation between a user and an agent. Consider the entire context of their discussion to make appropriate edits. Maintain the original HTML structure, including all HTML tags, while only modifying the content based on the conversation context. Do not change or remove any HTML tags. Ensure that your response includes all original HTML tags. Provide your response in the following JSON format:
+    const systemPrompt = `You are editing a part of a Wikipedia article in HTML format based on the conversation between a user and an agent. Consider ONLY the user's messages from the conversation to make appropriate edits - ignore the agent's responses. Maintain the original HTML structure, including all HTML tags, while only modifying the content based on the user's requests. Do not change or remove any HTML tags. Ensure that your response includes all original HTML tags. Provide your response in the following JSON format:
 
 {
-  "feedback": "{Your natural language feedback explaining the changes made based on the conversation}",
+  "feedback": "{Your natural language feedback explaining the changes made based on the user's requests}",
   "editedHtml": "{The edited part in HTML format}"
 }`;
 

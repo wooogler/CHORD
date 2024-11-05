@@ -288,7 +288,7 @@ export default function ChatContainer({
       role: "representative",
       agentName: "The Liason",
       content: editingResponse.feedback,
-      originalContentHtml: editedHtml,
+      originalContentHtml: selectedHtml,
       editedContentHtml: editingResponse.editedHtml,
     };
 
