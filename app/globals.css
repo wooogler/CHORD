@@ -72,6 +72,10 @@ body {
   background-color: yellow;
 }
 
+#prompt-editor-content .highlight-gray {
+  background-color: lightgray;
+}
+
 #prompt-editor-content .highlight-green {
   background-color: lightgreen;
 }

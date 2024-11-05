@@ -6,18 +6,20 @@ import { Box, Stack } from "@mui/material";
 
 export default function MessageBubble({
   message,
-  prevRole,
+  move,
   setActiveAgent,
   activeAgent,
   setContentHtml,
   isLastEditMessage,
+  setIsLocked,
 }: {
   message: Message;
-  prevRole?: MessageRole;
+  move?: "right" | "left";
   setActiveAgent: (agentName: string) => void;
   activeAgent: string | null;
   setContentHtml: (value: React.SetStateAction<string>) => void;
   isLastEditMessage: boolean;
+  setIsLocked: (value: React.SetStateAction<boolean>) => void;
 }) {
   const [isChangesApplied, setIsChangesApplied] = useState(false);
   const {
@@ -37,7 +39,7 @@ export default function MessageBubble({
 
   let initialAlignment: "left" | "right";
 
-  if (role === "user" || (role === "representative" && prevRole === "user")) {
+  if (role === "user" || (move === "left" && role === "representative")) {
     initialAlignment = "right";
   } else {
     initialAlignment = "left";
@@ -49,12 +51,12 @@ export default function MessageBubble({
 
   useEffect(() => {
     let timer: NodeJS.Timeout | null = null;
-    if (role === "representative" && prevRole === "user") {
+    if (role === "representative" && move === "left") {
       setSpacerWidth("100%");
       timer = setTimeout(() => {
         setSpacerWidth("0%");
       }, 600);
-    } else if (role === "representative" && prevRole === "agent") {
+    } else if (role === "representative" && move === "right") {
       setSpacerWidth("0%");
       timer = setTimeout(() => {
         setSpacerWidth("100%");
@@ -65,7 +67,7 @@ export default function MessageBubble({
     return () => {
       if (timer) clearTimeout(timer);
     };
-  }, [role, prevRole, initialAlignment]);
+  }, [role, move, initialAlignment]);
 
   const getBubbleColorClasses = (
     role: MessageRole,
@@ -87,20 +89,24 @@ export default function MessageBubble({
     agentName
   )}`;
 
-  const applyChanges = () => {
+  const applyChanges = (apply: boolean) => {
     setContentHtml((prevContentHtml: string) => {
       // Create a temporary DOM element
       const tempDiv = document.createElement("div");
       tempDiv.innerHTML = prevContentHtml;
 
-      // Find the span element with the highlight-yellow class
+      // Find the span element with the highlight-gray class
       const highlightedSpan = tempDiv.querySelector("span.highlight-yellow");
 
       if (highlightedSpan) {
         // Create a new span element
         const newSpan = document.createElement("span");
-        newSpan.className = "highlight-green";
-        newSpan.innerHTML = message.editedContentHtml || prevContentHtml;
+        if (apply) {
+          newSpan.className = "highlight-green";
+          newSpan.innerHTML = message.editedContentHtml || "";
+        } else {
+          newSpan.innerHTML = message.originalContentHtml || "";
+        }
 
         // Replace the existing element with the new one
         highlightedSpan.parentNode?.replaceChild(newSpan, highlightedSpan);
@@ -113,18 +119,17 @@ export default function MessageBubble({
       return prevContentHtml;
     });
     setIsChangesApplied(true);
+    setIsLocked(true);
   };
 
   return (
     <div className={`flex w-full`}>
-      {(role === "user" || role === "representative") && (
-        <div
-          style={{
-            width: spacerWidth,
-            transition: "width 0.5s ease",
-          }}
-        />
-      )}
+      <div
+        style={{
+          width: spacerWidth,
+          transition: "width 0.5s ease",
+        }}
+      />
 
       <div className="max-w-[70%] flex-shrink-0">
         {agentName && (
@@ -178,26 +183,35 @@ export default function MessageBubble({
                 );
               })}
           </Stack>
-          {originalContentHtml && (
+          {["representative", "assistant"].includes(role) && (
             <div className=" bg-white p-2 rounded-lg mt-2">
               <div
                 className="diff-container"
                 dangerouslySetInnerHTML={{ __html: diffHtml }}
               />
               {!isChangesApplied && isLastEditMessage && (
-                <div className="flex mt-2">
+                <div className="flex mt-2 font-bold">
                   <button
                     className="text-blue-600 text-xs"
-                    onClick={applyChanges}
+                    onClick={() => applyChanges(true)}
                   >
                     Apply Changes
                   </button>
-                  <button
-                    className="text-red-600 text-xs ml-2"
-                    onClick={() => setIsChangesApplied(true)}
-                  >
-                    Cancel
-                  </button>
+                  {move === "left" ? (
+                    <button
+                      className="text-red-600 text-xs ml-2"
+                      onClick={() => applyChanges(false)}
+                    >
+                      Cancel
+                    </button>
+                  ) : (
+                    <button
+                      className="text-red-600 text-xs ml-2"
+                      onClick={() => setIsChangesApplied(true)}
+                    >
+                      Ask Again
+                    </button>
+                  )}
                 </div>
               )}
             </div>

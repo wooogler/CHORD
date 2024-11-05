@@ -17,17 +17,34 @@ export default function ChordEditor({
   const [contentHtml, setContentHtml] = useState(articleHtml);
   const [selectedHtml, setSelectedHtml] = useState("");
   const [isEditable, setIsEditable] = useState(true);
+  const [isLocked, setIsLocked] = useState(false);
 
   useEffect(() => {
     setContentHtml(articleHtml);
   }, [articleHtml]);
+
+  useEffect(() => {
+    const editor = document.getElementById("prompt-editor-content");
+    if (editor) {
+      const highlights = editor.querySelectorAll(
+        ".highlight-yellow, .highlight-gray"
+      );
+      highlights.forEach((highlight) => {
+        if (isLocked) {
+          highlight.className = "highlight-gray";
+        } else {
+          highlight.className = "highlight-yellow";
+        }
+      });
+    }
+  }, [isLocked]);
 
   const handleChange = (evt: React.FormEvent<HTMLDivElement>) => {
     setContentHtml(evt.currentTarget.innerHTML);
   };
 
   const handleSelection = () => {
-    if (!isEditable) return;
+    if (!isEditable || isLocked) return;
 
     const selection = window.getSelection();
     if (selection && !selection.isCollapsed) {
@@ -37,13 +54,15 @@ export default function ChordEditor({
       const editor = document.getElementById("prompt-editor-content");
       if (editor) {
         // Replace all existing spans with the original content (removing highlight)
-        editor.querySelectorAll(".highlight-yellow").forEach((highlight) => {
-          const parent = highlight.parentNode;
-          while (highlight.firstChild) {
-            parent?.insertBefore(highlight.firstChild, highlight);
-          }
-          parent?.removeChild(highlight);
-        });
+        editor
+          .querySelectorAll(".highlight-yellow, .highlight-gray")
+          .forEach((highlight) => {
+            const parent = highlight.parentNode;
+            while (highlight.firstChild) {
+              parent?.insertBefore(highlight.firstChild, highlight);
+            }
+            parent?.removeChild(highlight);
+          });
       }
 
       // 2. Apply new highlight
@@ -87,6 +106,7 @@ export default function ChordEditor({
           setSelectedHtml={setSelectedHtml}
           setContentHtml={setContentHtml}
           condition="chord"
+          setIsLocked={setIsLocked}
         />
       </div>
     </div>

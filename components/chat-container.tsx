@@ -11,6 +11,9 @@ import htmldiff from "node-htmldiff";
 import MessageBubble from "./message-bubble";
 import { cleanDiffHtml, mapStrToColor } from "@/lib/utils";
 import agentProfiles from "@/lib/agentProfiles";
+import PromptInput from "./prompt-input";
+import ChordInput from "./chord-input";
+
 export type MessageRole = "user" | "assistant" | "representative" | "agent";
 export type Message = {
   role: MessageRole;
@@ -30,11 +33,13 @@ export default function ChatContainer({
   setSelectedHtml,
   setContentHtml,
   condition,
+  setIsLocked,
 }: {
   selectedHtml: string;
   setSelectedHtml: React.Dispatch<React.SetStateAction<string>>;
   setContentHtml: React.Dispatch<React.SetStateAction<string>>;
   condition: "prompt" | "chord";
+  setIsLocked: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [userInput, setUserInput] = useState("");
@@ -42,6 +47,9 @@ export default function ChatContainer({
   const [editedHtml, setEditedHtml] = useState("");
   const [cleanedEditedHtml, setCleanedEditedHtml] = useState("");
   const [activeAgent, setActiveAgent] = useState<string | null>(null);
+  const [phase, setPhase] = useState<"prompt" | "editing" | "conversation">(
+    "prompt"
+  );
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollToBottom = () => {
@@ -104,6 +112,7 @@ export default function ChatContainer({
     if (!userInput) return;
 
     setIsLoading(true);
+    setIsLocked(true);
     const userMessage: Message = {
       role: "user",
       content: userInput,
@@ -319,7 +328,6 @@ export default function ChatContainer({
   ) => {
     const agents = agentProfiles;
 
-    // 모든 에이전트에게 동시에 요청
     const agentPromises = agents.map(async (agentProfile) => {
       const { agentName, task, personality } = agentProfile;
 
@@ -382,11 +390,12 @@ export default function ChatContainer({
               >
                 <MessageBubble
                   message={message}
-                  prevRole={messages[index - 1]?.role}
+                  move={messages[index - 1]?.role === "user" ? "left" : "right"}
                   setActiveAgent={setActiveAgent}
                   activeAgent={activeAgent}
                   setContentHtml={setContentHtml}
                   isLastEditMessage={message === lastEditMessage}
+                  setIsLocked={setIsLocked}
                 />
               </div>
             );
@@ -395,102 +404,26 @@ export default function ChatContainer({
       </div>
 
       {condition === "prompt" ? (
-        <div className={`flex flex-col p-4 `}>
-          <textarea
-            className="w-full h-32 p-2 border rounded mb-4"
-            placeholder="Write your prompt here..."
-            value={userInput}
-            onChange={(e) => setUserInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.code === "Enter") {
-                handleSubmitPrompt();
-                e.preventDefault();
-              }
-            }}
-            disabled={isLoading}
-          />
-          <div className={`flex items-center space-x-2`}>
-            <button
-              onClick={handleSubmitPrompt}
-              className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 flex items-center justify-center flex-1 h-10"
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <span className="inline-block animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white"></span>
-              ) : (
-                "Submit"
-              )}
-            </button>
-          </div>
-        </div>
+        <PromptInput
+          userInput={userInput}
+          setUserInput={setUserInput}
+          isLoading={isLoading}
+          handleSubmitPrompt={handleSubmitPrompt}
+          isTextSelected={!!selectedHtml}
+        />
       ) : (
-        <div
-          className={`flex flex-col p-4 rounded-lg ${
-            activeAgent ? `bg-${mapStrToColor(activeAgent)}-200` : ""
-          }`}
-        >
-          <textarea
-            className="w-full h-32 p-2 border rounded mb-4"
-            placeholder="Write your suggestion here..."
-            value={userInput}
-            onChange={(e) => setUserInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.code === "Enter") {
-                if (activeAgent) {
-                  handleSubmitReply();
-                } else {
-                  handleSubmitSuggestion();
-                }
-                e.preventDefault();
-              }
-            }}
-            disabled={isLoading}
-          />
-
-          {activeAgent ? (
-            <div className={`flex items-center space-x-2`}>
-              <button
-                onClick={handleSubmitReply}
-                className={`text-white px-4 py-2 rounded flex font-bold items-center justify-center flex-1 h-10 bg-${mapStrToColor(
-                  activeAgent
-                )}-600`}
-              >
-                {isLoading ? (
-                  <span className="inline-block animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white"></span>
-                ) : (
-                  `Reply to ${activeAgent}`
-                )}
-              </button>
-              {activeAgent !== null ? (
-                <button
-                  className="text-white px-4 py-2 rounded bg-red-600 font-bold w-20"
-                  onClick={() => setActiveAgent(null)}
-                >
-                  Cancel
-                </button>
-              ) : (
-                <button
-                  className="text-white px-4 py-2 rounded bg-blue-600 font-bold w-20"
-                  onClick={handleEditWithActiveAgent}
-                >
-                  Edit
-                </button>
-              )}
-            </div>
-          ) : (
-            <button
-              onClick={handleSubmitSuggestion}
-              className="bg-blue-600 text-white px-4 py-2 rounded flex items-center justify-center flex-1 h-10"
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <span className="inline-block animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white"></span>
-              ) : (
-                "Submit"
-              )}
-            </button>
-          )}
-        </div>
+        <ChordInput
+          userInput={userInput}
+          setUserInput={setUserInput}
+          isLoading={isLoading}
+          activeAgent={activeAgent}
+          setActiveAgent={setActiveAgent}
+          handleSubmitReply={handleSubmitReply}
+          handleSubmitSuggestion={handleSubmitSuggestion}
+          handleEditWithActiveAgent={handleEditWithActiveAgent}
+          messages={messages}
+          isTextSelected={!!selectedHtml}
+        />
       )}
     </div>
   );
