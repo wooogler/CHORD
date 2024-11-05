@@ -20,8 +20,14 @@ export default function MessageBubble({
   isLastEditMessage: boolean;
 }) {
   const [isChangesApplied, setIsChangesApplied] = useState(false);
-  const { reactions, role, content, originalContentHtml, editedContentHtml, agentName } =
-    message;
+  const {
+    reactions,
+    role,
+    content,
+    originalContentHtml,
+    editedContentHtml,
+    agentName,
+  } = message;
 
   const diffHtml = htmldiff(
     originalContentHtml || "",
@@ -142,18 +148,35 @@ export default function MessageBubble({
         )}
         <Box className={bubbleClasses} sx={{ position: "relative" }}>
           <div>{content}</div>
-          <Stack direction="row" spacing={.8} sx={{ width: 24 * 3, height: 24, position: "absolute", top: "100%", left: "93.5%", transform: "translate(-100%, -50%)" }}>
-            {reactions?.filter((_, index) => index === 0 || index === 2 || index == 4).map((reaction, index) => {
-              return (
-                <Box className={`bg-${mapStrToColor(reaction.agentName)}-200`} key={index} sx={{
-                  width: 24,
-                  height: 24,
-                  border: "1px solid black"
-                }}>
-                  {reaction.emoji}
-                </Box>
-              )
-            })}
+          <Stack
+            direction="row"
+            spacing={0.8}
+            sx={{
+              width: 24 * 3,
+              height: 24,
+              position: "absolute",
+              top: "100%",
+              left: "93.5%",
+              transform: "translate(-100%, -50%)",
+            }}
+          >
+            {reactions
+              ?.filter((_, index) => index === 0 || index === 2 || index == 4)
+              .map((reaction, index) => {
+                return (
+                  <Box
+                    className={`bg-${mapStrToColor(reaction.agentName)}-200`}
+                    key={index}
+                    sx={{
+                      width: 24,
+                      height: 24,
+                      border: "1px solid black",
+                    }}
+                  >
+                    {reaction.emoji}
+                  </Box>
+                );
+              })}
           </Stack>
           {originalContentHtml && (
             <div className=" bg-white p-2 rounded-lg mt-2">

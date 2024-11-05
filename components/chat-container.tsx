@@ -20,8 +20,8 @@ export type Message = {
   agentName?: string;
   activeAgent?: string | null;
   reactions?: {
-    agentName: string,
-    emoji: string,
+    agentName: string;
+    emoji: string;
   }[];
 };
 
@@ -173,10 +173,14 @@ export default function ChatContainer({
 
         setMessages((prevMessages) => {
           const newMessages = [...prevMessages, agentMessage];
-          getReactionsToMessage(editedHtml, agentResponse ?? "", newMessages.length - 1, agentName)
+          getReactionsToMessage(
+            editedHtml,
+            agentResponse ?? "",
+            newMessages.length - 1,
+            agentName
+          );
           return newMessages;
         });
-
       } catch (error) {
         console.error(error);
       }
@@ -307,7 +311,12 @@ export default function ChatContainer({
     setEditedHtml(newEditedHtml);
   };
 
-  const getReactionsToMessage = async (editedHtml: string, message: string, messageIndex: number, originalAgent: string) => {
+  const getReactionsToMessage = async (
+    editedHtml: string,
+    message: string,
+    messageIndex: number,
+    originalAgent: string
+  ) => {
     const agents = agentProfiles;
 
     // 모든 에이전트에게 동시에 요청
@@ -320,16 +329,21 @@ export default function ChatContainer({
             editedHtml,
             task,
             personality,
-            message,
+            message
           );
 
-          console.log(agentResponse)
+          console.log(agentResponse);
 
           setMessages((prevMessages) => {
             if (prevMessages[messageIndex].reactions) {
-              prevMessages[messageIndex].reactions.push({ agentName: agentName, emoji: agentResponse ?? "X" })
+              prevMessages[messageIndex].reactions.push({
+                agentName: agentName,
+                emoji: agentResponse ?? "X",
+              });
             } else {
-              prevMessages[messageIndex].reactions = [{ agentName: agentName, emoji: agentResponse ?? "X" }]
+              prevMessages[messageIndex].reactions = [
+                { agentName: agentName, emoji: agentResponse ?? "X" },
+              ];
             }
             return [...prevMessages];
           });
@@ -337,7 +351,6 @@ export default function ChatContainer({
           console.error(error);
         }
       }
-
     });
 
     // 모든 응답이 완료될 때까지 기다림
@@ -371,7 +384,7 @@ export default function ChatContainer({
                   message={message}
                   prevRole={messages[index - 1]?.role}
                   setActiveAgent={setActiveAgent}
-                  activeAgent={message.activeAgent || null}
+                  activeAgent={activeAgent}
                   setContentHtml={setContentHtml}
                   isLastEditMessage={message === lastEditMessage}
                 />
@@ -412,8 +425,9 @@ export default function ChatContainer({
         </div>
       ) : (
         <div
-          className={`flex flex-col p-4 rounded-lg ${activeAgent ? `bg-${mapStrToColor(activeAgent)}-200` : ""
-            }`}
+          className={`flex flex-col p-4 rounded-lg ${
+            activeAgent ? `bg-${mapStrToColor(activeAgent)}-200` : ""
+          }`}
         >
           <textarea
             className="w-full h-32 p-2 border rounded mb-4"
@@ -447,7 +461,7 @@ export default function ChatContainer({
                   `Reply to ${activeAgent}`
                 )}
               </button>
-              {messages[messages.length - 1].activeAgent === null ? (
+              {activeAgent !== null ? (
                 <button
                   className="text-white px-4 py-2 rounded bg-red-600 font-bold w-20"
                   onClick={() => setActiveAgent(null)}
