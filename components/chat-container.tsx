@@ -66,6 +66,7 @@ export default function ChatContainer({
     if (!userInput) return;
 
     setIsLoading(true);
+    setIsLocked(true);
 
     setMessages((prevMessages) => {
       const newMessages = [
@@ -75,14 +76,9 @@ export default function ChatContainer({
       return newMessages;
     });
 
-    try {
-      // Show spinner
-      const highlightedSpan = document.querySelector(".highlight-yellow");
-      if (highlightedSpan) {
-        const spinner = highlightedSpan.querySelector(".spinner");
-        if (spinner) spinner.classList.remove("hidden");
-      }
+    setUserInput("");
 
+    try {
       const response = await editArticleWithUserInputOnly({
         articleHtml: selectedHtml,
         userInput: userInput,
@@ -99,12 +95,12 @@ export default function ChatContainer({
         const newMessages = [...prevMessages, assistantMessage];
         return newMessages;
       });
+
+      setPhase("editing");
     } catch (error) {
       console.error(error);
     } finally {
       setIsLoading(false);
-      setSelectedHtml("");
-      setUserInput("");
     }
   };
 
@@ -113,6 +109,7 @@ export default function ChatContainer({
 
     setIsLoading(true);
     setIsLocked(true);
+
     const userMessage: Message = {
       role: "user",
       content: userInput,
@@ -142,6 +139,7 @@ export default function ChatContainer({
         const newMessages = [...prevMessages, representativeMessage];
         return newMessages;
       });
+      setPhase("editing");
 
       const cleanedEditedHtml = cleanDiffHtml(
         htmldiff(selectedHtml, editingResponse.editedHtml)
@@ -156,7 +154,6 @@ export default function ChatContainer({
       console.error(error);
     } finally {
       setIsLoading(false);
-      setUserInput("");
     }
   };
 
@@ -392,10 +389,13 @@ export default function ChatContainer({
                   message={message}
                   move={messages[index - 1]?.role === "user" ? "left" : "right"}
                   setActiveAgent={setActiveAgent}
+                  setMessages={setMessages}
                   activeAgent={activeAgent}
                   setContentHtml={setContentHtml}
                   isLastEditMessage={message === lastEditMessage}
                   setIsLocked={setIsLocked}
+                  setSelectedHtml={setSelectedHtml}
+                  setPhase={setPhase}
                 />
               </div>
             );
@@ -410,6 +410,7 @@ export default function ChatContainer({
           isLoading={isLoading}
           handleSubmitPrompt={handleSubmitPrompt}
           isTextSelected={!!selectedHtml}
+          phase={phase}
         />
       ) : (
         <ChordInput
@@ -423,6 +424,7 @@ export default function ChatContainer({
           handleEditWithActiveAgent={handleEditWithActiveAgent}
           messages={messages}
           isTextSelected={!!selectedHtml}
+          phase={phase}
         />
       )}
     </div>

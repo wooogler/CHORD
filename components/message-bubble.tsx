@@ -12,6 +12,9 @@ export default function MessageBubble({
   setContentHtml,
   isLastEditMessage,
   setIsLocked,
+  setMessages,
+  setSelectedHtml,
+  setPhase,
 }: {
   message: Message;
   move?: "right" | "left";
@@ -20,8 +23,13 @@ export default function MessageBubble({
   setContentHtml: (value: React.SetStateAction<string>) => void;
   isLastEditMessage: boolean;
   setIsLocked: (value: React.SetStateAction<boolean>) => void;
+  setMessages: React.Dispatch<React.SetStateAction<Message[]>>;
+  setSelectedHtml: (value: React.SetStateAction<string>) => void;
+  setPhase: (phase: "prompt" | "editing" | "conversation") => void;
 }) {
-  const [isChangesApplied, setIsChangesApplied] = useState(false);
+  const [applyStatus, setApplyStatus] = useState<
+    "applied" | "cancelled" | "deferred" | null
+  >(null);
   const {
     reactions,
     role,
@@ -36,6 +44,10 @@ export default function MessageBubble({
     editedContentHtml || "",
     null
   );
+
+  console.log("originalContentHtml", originalContentHtml);
+  console.log("editedContentHtml", editedContentHtml);
+  console.log("diffHtml", diffHtml);
 
   let initialAlignment: "left" | "right";
 
@@ -95,7 +107,7 @@ export default function MessageBubble({
       const tempDiv = document.createElement("div");
       tempDiv.innerHTML = prevContentHtml;
 
-      // Find the span element with the highlight-gray class
+      // Find the span element with the highlight-yellow class
       const highlightedSpan = tempDiv.querySelector("span.highlight-yellow");
 
       if (highlightedSpan) {
@@ -118,8 +130,17 @@ export default function MessageBubble({
       // If no matching element is found, return the original content
       return prevContentHtml;
     });
-    setIsChangesApplied(true);
-    setIsLocked(true);
+    setMessages((prevMessages) => {
+      const newMessages = [...prevMessages];
+      const messagesWithoutFirstFeedback = newMessages.filter(
+        (msg) => msg.role !== "agent" || msg.activeAgent
+      );
+      return messagesWithoutFirstFeedback;
+    });
+    setApplyStatus(apply ? "applied" : "cancelled");
+    setIsLocked(false);
+    setSelectedHtml("");
+    setPhase("prompt");
   };
 
   return (
@@ -186,10 +207,11 @@ export default function MessageBubble({
           {["representative", "assistant"].includes(role) && (
             <div className=" bg-white p-2 rounded-lg mt-2">
               <div
-                className="diff-container"
+                className={`diff-container ${applyStatus ? "opacity-50" : ""}`}
                 dangerouslySetInnerHTML={{ __html: diffHtml }}
+                style={{ pointerEvents: applyStatus ? "none" : "auto" }}
               />
-              {!isChangesApplied && isLastEditMessage && (
+              {!applyStatus && isLastEditMessage && (
                 <div className="flex mt-2 font-bold">
                   <button
                     className="text-blue-600 text-xs"
@@ -207,11 +229,28 @@ export default function MessageBubble({
                   ) : (
                     <button
                       className="text-red-600 text-xs ml-2"
-                      onClick={() => setIsChangesApplied(true)}
+                      onClick={() => setApplyStatus("deferred")}
                     >
                       Ask Again
                     </button>
                   )}
+                </div>
+              )}
+              {applyStatus && (
+                <div
+                  className={`text-xs font-bold mt-2 ${
+                    applyStatus === "applied"
+                      ? "text-blue-800"
+                      : applyStatus === "cancelled"
+                      ? "text-red-800"
+                      : "text-gray-800"
+                  }`}
+                >
+                  {applyStatus === "applied"
+                    ? "Changes applied"
+                    : applyStatus === "cancelled"
+                    ? "Changes cancelled"
+                    : "Changes deferred"}
                 </div>
               )}
             </div>

@@ -13,6 +13,7 @@ interface ChordInputProps {
   handleEditWithActiveAgent: () => void;
   messages: Message[];
   isTextSelected: boolean;
+  phase: "prompt" | "editing" | "conversation";
 }
 
 export default function ChordInput({
@@ -26,6 +27,7 @@ export default function ChordInput({
   handleEditWithActiveAgent,
   messages,
   isTextSelected,
+  phase,
 }: ChordInputProps) {
   return (
     <div
@@ -52,7 +54,9 @@ export default function ChordInput({
             e.preventDefault();
           }
         }}
-        disabled={isLoading || !isTextSelected}
+        disabled={
+          isLoading || !isTextSelected || (phase === "editing" && !activeAgent)
+        }
       />
 
       {activeAgent ? (
@@ -89,10 +93,12 @@ export default function ChordInput({
         <button
           onClick={handleSubmitSuggestion}
           className="bg-blue-600 text-white px-4 py-2 rounded flex items-center justify-center flex-1 h-10 disabled:bg-gray-300"
-          disabled={isLoading || !isTextSelected}
+          disabled={isLoading || !isTextSelected || phase === "editing"}
         >
           {isLoading ? (
             <span className="inline-block animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white"></span>
+          ) : phase === "editing" ? (
+            "Edit or Reply"
           ) : (
             "Submit"
           )}

@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import ChatContainer from "./chat-container";
 import WikiViewer from "./wiki-viewer";
 import EditModeSwitch from "./edit-mode-switch";
+
 export default function PromptEditor({
   articleHtml,
   articleTitle,
@@ -14,17 +15,35 @@ export default function PromptEditor({
   const [contentHtml, setContentHtml] = useState(articleHtml);
   const [selectedHtml, setSelectedHtml] = useState("");
   const [isEditable, setIsEditable] = useState(true);
+  const [isLocked, setIsLocked] = useState(false);
 
   useEffect(() => {
     setContentHtml(articleHtml);
   }, [articleHtml]);
 
+  useEffect(() => {
+    const editor = document.getElementById("prompt-editor-content");
+    if (editor) {
+      const highlights = editor.querySelectorAll(
+        ".highlight-yellow, .highlight-gray"
+      );
+      highlights.forEach((highlight) => {
+        if (isLocked) {
+          highlight.className = "highlight-gray";
+        } else {
+          highlight.className = "highlight-yellow";
+        }
+      });
+    }
+  }, [isLocked]);
+
   const handleChange = (evt: React.FormEvent<HTMLDivElement>) => {
+    if (isLocked || !isEditable) return;
     setContentHtml(evt.currentTarget.innerHTML);
   };
 
   const handleSelection = () => {
-    if (!isEditable) return;
+    if (!isEditable || isLocked) return;
 
     const selection = window.getSelection();
     if (selection && !selection.isCollapsed) {
@@ -33,13 +52,18 @@ export default function PromptEditor({
       // 1. Remove existing highlight
       const editor = document.getElementById("prompt-editor-content");
       if (editor) {
-        editor.querySelectorAll(".highlight-yellow").forEach((highlight) => {
-          const parent = highlight.parentNode;
-          while (highlight.firstChild) {
-            parent?.insertBefore(highlight.firstChild, highlight);
-          }
-          parent?.removeChild(highlight);
-        });
+        // Replace all existing spans with the original content (removing highlight)
+        editor
+          .querySelectorAll(
+            ".highlight-yellow, .highlight-gray, .highlight-green"
+          )
+          .forEach((highlight) => {
+            const parent = highlight.parentNode;
+            while (highlight.firstChild) {
+              parent?.insertBefore(highlight.firstChild, highlight);
+            }
+            parent?.removeChild(highlight);
+          });
       }
 
       // 2. Apply new highlight
@@ -47,20 +71,16 @@ export default function PromptEditor({
       highlightSpan.className = "highlight-yellow";
       const selectedContent = range.extractContents();
       highlightSpan.appendChild(selectedContent);
-
       range.insertNode(highlightSpan);
 
+      // Clear the selection
       selection.removeAllRanges();
 
+      // Update the content state to reflect changes
       setContentHtml(
         document.getElementById("prompt-editor-content")?.innerHTML || ""
       );
       setSelectedHtml(highlightSpan.innerHTML);
-
-      const spinnerSpan = document.createElement("span");
-      spinnerSpan.className =
-        "inline-block animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-blue-500 hidden spinner";
-      highlightSpan.appendChild(spinnerSpan);
     }
   };
 
@@ -87,6 +107,7 @@ export default function PromptEditor({
           setSelectedHtml={setSelectedHtml}
           setContentHtml={setContentHtml}
           condition="prompt"
+          setIsLocked={setIsLocked}
         />
       </div>
     </div>

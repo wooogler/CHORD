@@ -1,9 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import ContentEditable from "react-contenteditable";
 import ChatContainer from "./chat-container";
-import { Switch, FormControlLabel } from "@mui/material";
 import WikiViewer from "./wiki-viewer";
 import EditModeSwitch from "./edit-mode-switch";
 
@@ -40,6 +38,7 @@ export default function ChordEditor({
   }, [isLocked]);
 
   const handleChange = (evt: React.FormEvent<HTMLDivElement>) => {
+    if (isLocked || !isEditable) return;
     setContentHtml(evt.currentTarget.innerHTML);
   };
 
@@ -55,7 +54,9 @@ export default function ChordEditor({
       if (editor) {
         // Replace all existing spans with the original content (removing highlight)
         editor
-          .querySelectorAll(".highlight-yellow, .highlight-gray")
+          .querySelectorAll(
+            ".highlight-yellow, .highlight-gray, .highlight-green"
+          )
           .forEach((highlight) => {
             const parent = highlight.parentNode;
             while (highlight.firstChild) {
