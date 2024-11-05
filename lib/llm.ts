@@ -241,11 +241,12 @@ ${task}
 Personality:
 ${personality}
 
-${chatHistory
-          ? `Chat History:
+${
+  chatHistory
+    ? `Chat History:
 ${formatChatHistory(chatHistory)}`
-          : ""
-        }
+    : ""
+}
 
 Please provide your feedback on the edited content.`,
     },
@@ -270,7 +271,7 @@ export async function getReactionFromAgent(
   editedHtml: string,
   task: string,
   personality: string,
-  message: string,
+  message: string
 ) {
   const inputMessages: OpenAI.ChatCompletionMessageParam[] = [
     {
@@ -293,7 +294,10 @@ Please select an emoji to react to this message: ${message}`,
     },
   ];
 
-  logMessages("getFeedbackFromAgent", inputMessages);
+  logMessages({
+    functionName: "getReactionFromAgent",
+    messages: inputMessages,
+  });
 
   const completion = await openai.chat.completions.create({
     model: "gpt-4o",
