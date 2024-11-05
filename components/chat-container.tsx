@@ -1,12 +1,10 @@
 "use client";
 
 import {
-  editArticleAsPillar,
   editArticleWithConversation,
-  editArticleWithEditingAgent,
-  editArticleWithUserInputAndPillars,
   editArticleWithUserInputOnly,
   getFeedbackFromAgent,
+  getReactionFromAgent,
 } from "@/lib/llm";
 import React, { useEffect, useRef, useState } from "react";
 import htmldiff from "node-htmldiff";
@@ -21,6 +19,10 @@ export type Message = {
   editedContentHtml?: string;
   agentName?: string;
   activeAgent?: string | null;
+  reactions?: {
+    agentName: string,
+    emoji: string,
+  }[];
 };
 
 export default function ChatContainer({
@@ -172,8 +174,10 @@ export default function ChatContainer({
 
         setMessages((prevMessages) => {
           const newMessages = [...prevMessages, agentMessage];
+          getReactionsToMessage(editedHtml, agentResponse ?? "", newMessages.length - 1, agentName)
           return newMessages;
         });
+
       } catch (error) {
         console.error(error);
       }
@@ -304,6 +308,44 @@ export default function ChatContainer({
     setEditedHtml(newEditedHtml);
   };
 
+  const getReactionsToMessage = async (editedHtml: string, message: string, messageIndex: number, originalAgent: string) => {
+    const agents = agentProfiles;
+
+    // 모든 에이전트에게 동시에 요청
+    const agentPromises = agents.map(async (agentProfile) => {
+      const { agentName, task, personality } = agentProfile;
+
+      if (agentName !== originalAgent) {
+        try {
+          const agentResponse = await getReactionFromAgent(
+            editedHtml,
+            task,
+            personality,
+            message,
+          );
+
+          console.log(agentResponse)
+
+          setMessages((prevMessages) => {
+            if (prevMessages[messageIndex].reactions) {
+              prevMessages[messageIndex].reactions.push({ agentName: agentName, emoji: agentResponse ?? "X" })
+            } else {
+              prevMessages[messageIndex].reactions = [{ agentName: agentName, emoji: agentResponse ?? "X" }]
+            }
+            return [...prevMessages];
+          });
+        } catch (error) {
+          console.error(error);
+        }
+      }
+
+    });
+
+    // 모든 응답이 완료될 때까지 기다림
+    await Promise.all(agentPromises);
+    setIsLoading(false);
+  };
+
   return (
     <div className="flex flex-col flex-1 min-h-0">
       <div
@@ -371,9 +413,8 @@ export default function ChatContainer({
         </div>
       ) : (
         <div
-          className={`flex flex-col p-4 rounded-lg ${
-            activeAgent ? `bg-${mapStrToColor(activeAgent)}-200` : ""
-          }`}
+          className={`flex flex-col p-4 rounded-lg ${activeAgent ? `bg-${mapStrToColor(activeAgent)}-200` : ""
+            }`}
         >
           <textarea
             className="w-full h-32 p-2 border rounded mb-4"

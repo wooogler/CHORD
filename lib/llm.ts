@@ -222,14 +222,52 @@ ${task}
 Personality:
 ${personality}
 
-${
-  chatHistory
-    ? `Chat History:
+${chatHistory
+          ? `Chat History:
 ${formatChatHistory(chatHistory)}`
-    : ""
-}
+          : ""
+        }
 
 Please provide your feedback on the edited content.`,
+    },
+  ];
+
+  logMessages("getFeedbackFromAgent", inputMessages);
+
+  const completion = await openai.chat.completions.create({
+    model: "gpt-4o",
+    messages: inputMessages,
+  });
+
+  const agentResponse = completion.choices[0].message.content;
+
+  return agentResponse;
+}
+
+export async function getReactionFromAgent(
+  editedHtml: string,
+  task: string,
+  personality: string,
+  message: string,
+) {
+  const inputMessages: OpenAI.ChatCompletionMessageParam[] = [
+    {
+      role: "system",
+      content: `You are an AI assistant selecting a single emoji from this list: (👍, 👎, 😠, 😑, 🤯) to respond to a message. The message you are reacting to was created in response to an edited HTML page. Use your given personality to select the best emoji.`,
+    },
+    {
+      role: "system",
+      content: `Edited Content:
+${editedHtml}
+
+Task:
+${task}
+
+Personality:
+${personality}
+}
+
+Please select an emoji to react to this message: ${message}`,
     },
   ];
 
