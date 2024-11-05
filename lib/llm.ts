@@ -87,7 +87,10 @@ export async function editArticleWithUserInputOnly({
       },
     ];
 
-    logMessages("editArticleWithUserInputOnly", inputMessages);
+    logMessages({
+      functionName: "editArticleWithUserInputOnly",
+      messages: inputMessages,
+    });
 
     const completion = await openai.chat.completions.create({
       model: "gpt-4o",
@@ -168,12 +171,17 @@ export async function editArticleWithEditingAgent({
   }
 }
 
-export async function editArticleAsPillar(
-  articleHtml: string,
-  agentEdit: string,
-  pillar: string,
-  personality: string
-) {
+export async function editArticleAsPillar({
+  articleHtml,
+  agentEdit,
+  pillar,
+  personality,
+}: {
+  articleHtml: string;
+  agentEdit: string;
+  pillar: string;
+  personality: string;
+}) {
   return openai.chat.completions
     .create({
       model: "gpt-4o",
@@ -200,16 +208,27 @@ export async function editArticleAsPillar(
     });
 }
 
-export async function getFeedbackFromAgent(
-  editedHtml: string,
-  task: string,
-  personality: string,
-  chatHistory?: Message[]
-) {
+export async function getFeedbackFromAgent({
+  editedHtml,
+  task,
+  personality,
+  chatHistory,
+  isMultiAgentChat = false,
+}: {
+  editedHtml: string;
+  task: string;
+  personality: string;
+  chatHistory?: Message[];
+  isMultiAgentChat?: boolean;
+}) {
   const inputMessages: OpenAI.ChatCompletionMessageParam[] = [
     {
       role: "system",
-      content: `You are an AI assistant providing ultra-concise feedback (max 100 characters) on edited content. Match the given personality and be casual like in a group chat.`,
+      content: `You are an AI assistant providing feedback on edited content. ${
+        isMultiAgentChat
+          ? "Keep your response ultra-concise (max 100 characters)"
+          : "Provide detailed feedback without length restrictions"
+      }. Match the given personality and be casual like in a group chat.`,
     },
     {
       role: "user",
@@ -233,7 +252,10 @@ Please provide your feedback on the edited content.`,
     },
   ];
 
-  logMessages("getFeedbackFromAgent", inputMessages);
+  logMessages({
+    functionName: "getFeedbackFromAgent",
+    messages: inputMessages,
+  });
 
   const completion = await openai.chat.completions.create({
     model: "gpt-4o",
@@ -279,7 +301,10 @@ export async function editArticleWithConversation({
       },
     ];
 
-    logMessages("editArticleWithConversation", inputMessages);
+    logMessages({
+      functionName: "editArticleWithConversation",
+      messages: inputMessages,
+    });
 
     const completion = await openai.chat.completions.create({
       model: "gpt-4o",
@@ -308,10 +333,13 @@ export async function editArticleWithConversation({
   }
 }
 
-function logMessages(
-  functionName: string,
-  messages: OpenAI.ChatCompletionMessageParam[]
-) {
+function logMessages({
+  functionName,
+  messages,
+}: {
+  functionName: string;
+  messages: OpenAI.ChatCompletionMessageParam[];
+}) {
   console.log(`
 ${functionName} - messages:
 -------------------------------------------`);

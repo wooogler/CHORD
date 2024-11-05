@@ -152,18 +152,17 @@ export default function ChatContainer({
   const getFirstFeedbackFromAgents = async (editedHtml: string) => {
     const agents = agentProfiles;
 
-    // 모든 에이전트에게 동시에 요청
     const agentPromises = agents.map(async (agentProfile) => {
       const { agentName, task, personality } = agentProfile;
 
       try {
-        const agentResponse = await getFeedbackFromAgent(
+        const agentResponse = await getFeedbackFromAgent({
           editedHtml,
           task,
-          personality
-        );
+          personality,
+          isMultiAgentChat: true,
+        });
 
-        // 각 응답이 오면 바로 메시지에 추가
         const agentMessage: Message = {
           role: "agent",
           agentName: agentName,
@@ -179,7 +178,6 @@ export default function ChatContainer({
       }
     });
 
-    // 모든 응답이 완료될 때까지 기다림
     await Promise.all(agentPromises);
     setIsLoading(false);
   };
@@ -236,12 +234,13 @@ export default function ChatContainer({
         []
       );
 
-      const response = await getFeedbackFromAgent(
-        cleanedEditedHtml,
-        agentProfile?.task || "",
-        agentProfile?.personality || "",
-        latestMessagesWithActiveAgent
-      );
+      const response = await getFeedbackFromAgent({
+        editedHtml: cleanedEditedHtml,
+        task: agentProfile?.task || "",
+        personality: agentProfile?.personality || "",
+        chatHistory: latestMessagesWithActiveAgent,
+        isMultiAgentChat: false,
+      });
       setMessages((prevMessages) => {
         const newMessages = [
           ...prevMessages,
