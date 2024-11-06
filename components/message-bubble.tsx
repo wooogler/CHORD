@@ -6,7 +6,6 @@ import { Box, Stack } from "@mui/material";
 
 export default function MessageBubble({
   message,
-  move,
   setActiveAgent,
   activeAgent,
   setContentHtml,
@@ -15,9 +14,9 @@ export default function MessageBubble({
   setMessages,
   setSelectedHtml,
   setPhase,
+  handleAskAgain,
 }: {
   message: Message;
-  move?: "right" | "left";
   setActiveAgent: (agentName: string) => void;
   activeAgent: string | null;
   setContentHtml: (value: React.SetStateAction<string>) => void;
@@ -26,6 +25,7 @@ export default function MessageBubble({
   setMessages: React.Dispatch<React.SetStateAction<Message[]>>;
   setSelectedHtml: (value: React.SetStateAction<string>) => void;
   setPhase: (phase: "prompt" | "editing" | "conversation") => void;
+  handleAskAgain: () => void;
 }) {
   const [applyStatus, setApplyStatus] = useState<
     "applied" | "cancelled" | "deferred" | null
@@ -37,6 +37,7 @@ export default function MessageBubble({
     originalContentHtml,
     editedContentHtml,
     agentName,
+    move,
   } = message;
 
   const diffHtml = htmldiff(
@@ -229,7 +230,10 @@ export default function MessageBubble({
                   ) : (
                     <button
                       className="text-red-600 text-xs ml-2"
-                      onClick={() => setApplyStatus("deferred")}
+                      onClick={() => {
+                        setApplyStatus("deferred");
+                        handleAskAgain();
+                      }}
                     >
                       Ask Again
                     </button>

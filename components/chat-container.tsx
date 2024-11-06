@@ -26,6 +26,7 @@ export type Message = {
     agentName: string;
     emoji: string;
   }[];
+  move?: "left" | "right";
 };
 
 export default function ChatContainer({
@@ -133,6 +134,7 @@ export default function ChatContainer({
         content: editingResponse.feedback,
         originalContentHtml: selectedHtml,
         editedContentHtml: editingResponse.editedHtml,
+        move: "left",
       };
 
       setMessages((prevMessages) => {
@@ -149,7 +151,7 @@ export default function ChatContainer({
 
       setEditedHtml(editingResponse.editedHtml);
 
-      getFirstFeedbackFromAgents(cleanedEditedHtml);
+      getFeedbackFromAgents(cleanedEditedHtml);
     } catch (error) {
       console.error(error);
     } finally {
@@ -157,7 +159,7 @@ export default function ChatContainer({
     }
   };
 
-  const getFirstFeedbackFromAgents = async (editedHtml: string) => {
+  const getFeedbackFromAgents = async (editedHtml: string) => {
     const agents = agentProfiles;
 
     const agentPromises = agents.map(async (agentProfile) => {
@@ -303,6 +305,7 @@ export default function ChatContainer({
       content: editingResponse.feedback,
       originalContentHtml: selectedHtml,
       editedContentHtml: editingResponse.editedHtml,
+      move: "right",
     };
 
     setMessages((prevMessages) => {
@@ -310,11 +313,22 @@ export default function ChatContainer({
       return newMessages;
     });
 
-    const newEditedHtml = cleanDiffHtml(
+    const cleanedEditedHtml = cleanDiffHtml(
       htmldiff(selectedHtml, editingResponse.editedHtml)
     );
 
-    setEditedHtml(newEditedHtml);
+    setCleanedEditedHtml(cleanedEditedHtml);
+
+    setEditedHtml(editingResponse.editedHtml);
+  };
+
+  const handleAskAgain = () => {
+    setMessages((prevMessages) => {
+      const lastMessage = prevMessages[prevMessages.length - 1];
+      return [...prevMessages.slice(0, -1), { ...lastMessage, move: "left" }];
+    });
+    setPhase("editing");
+    getFeedbackFromAgents(cleanedEditedHtml);
   };
 
   const getReactionsToMessage = async (
@@ -387,7 +401,6 @@ export default function ChatContainer({
               >
                 <MessageBubble
                   message={message}
-                  move={messages[index - 1]?.role === "user" ? "left" : "right"}
                   setActiveAgent={setActiveAgent}
                   setMessages={setMessages}
                   activeAgent={activeAgent}
@@ -396,6 +409,7 @@ export default function ChatContainer({
                   setIsLocked={setIsLocked}
                   setSelectedHtml={setSelectedHtml}
                   setPhase={setPhase}
+                  handleAskAgain={handleAskAgain}
                 />
               </div>
             );
