@@ -220,14 +220,7 @@ export default function MessageBubble({
                   >
                     Apply Changes
                   </button>
-                  {move === "left" ? (
-                    <button
-                      className="text-red-600 text-xs ml-2"
-                      onClick={() => applyChanges(false)}
-                    >
-                      Cancel
-                    </button>
-                  ) : (
+                  {move === "right" ? (
                     <button
                       className="text-red-600 text-xs ml-2"
                       onClick={() => {
@@ -236,6 +229,13 @@ export default function MessageBubble({
                       }}
                     >
                       Ask Again
+                    </button>
+                  ) : (
+                    <button
+                      className="text-red-600 text-xs ml-2"
+                      onClick={() => applyChanges(false)}
+                    >
+                      Cancel
                     </button>
                   )}
                 </div>
