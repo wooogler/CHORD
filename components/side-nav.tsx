@@ -1,15 +1,9 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import {
-  Autocomplete,
-  Button,
-  IconButton,
-  Stack,
-  TextField,
-} from "@mui/material";
+import { Autocomplete, IconButton, Stack, TextField } from "@mui/material";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import wiki from "wikipedia";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 
@@ -22,6 +16,7 @@ export default function SideNav() {
   const [potentialWikiArticles, setPotentialWikiArticles] = useState<
     Array<string>
   >([]);
+  const defaultTitlesRef = useRef(defaultTitles);
 
   useEffect(() => {
     const storedTitles = localStorage.getItem("titles");
@@ -30,7 +25,7 @@ export default function SideNav() {
       storedTitles === undefined ||
       storedTitles === ""
     ) {
-      setTitles(defaultTitles);
+      setTitles(defaultTitlesRef.current);
     } else {
       setTitles(JSON.parse(storedTitles));
     }

@@ -1,8 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useCallback } from "react";
-import ContentEditable from "react-contenteditable";
-import { Switch, FormControlLabel } from "@mui/material";
+import React, { useEffect, useState } from "react";
 import WikiViewer from "./wiki-viewer";
 import EditModeSwitch from "./edit-mode-switch";
 export default function BaseEditor({

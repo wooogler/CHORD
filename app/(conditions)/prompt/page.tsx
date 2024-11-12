@@ -1,5 +1,6 @@
 import PromptEditor from "@/components/prompt-editor";
 import { getArticleHtmlByTitle } from "@/lib/wiki";
+import { Suspense } from "react";
 
 export default async function PromptPage({
   searchParams,
@@ -15,5 +16,9 @@ export default async function PromptPage({
     articleHtml = (await getArticleHtmlByTitle(title)) || "";
   }
 
-  return <PromptEditor articleHtml={articleHtml} articleTitle={title} />;
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <PromptEditor articleHtml={articleHtml} articleTitle={title} />
+    </Suspense>
+  );
 }

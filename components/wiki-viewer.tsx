@@ -5,7 +5,7 @@ import ContentEditable, { ContentEditableEvent } from "react-contenteditable";
 interface WikiViewerProps {
   content: string;
   isEditable: boolean;
-  handleChange?: (evt: any) => void;
+  handleChange?: (evt: React.FormEvent<HTMLDivElement>) => void;
   articleTitle: string;
   handleSelection?: () => void;
 }
