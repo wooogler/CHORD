@@ -1,4 +1,3 @@
-import { cleanWikiHtml } from "@/lib/utils";
 import React, { useCallback, useEffect, useRef } from "react";
 import * as cheerio from "cheerio";
 import ContentEditable, { ContentEditableEvent } from "react-contenteditable";
@@ -31,7 +30,6 @@ const WikiViewer: React.FC<WikiViewerProps> = ({
   isEditable,
   isLocked,
   articleTitle,
-  handleSelection,
 }) => {
   const contentEditableRef = useRef<string>(modifyWikiHtml(contentHtml));
 

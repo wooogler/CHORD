@@ -37,11 +37,6 @@ export default function PromptEditor({
     }
   }, [isLocked]);
 
-  const handleChange = (evt: React.FormEvent<HTMLDivElement>) => {
-    if (isLocked || !isEditable) return;
-    setContentHtml(evt.currentTarget.innerHTML);
-  };
-
   const handleSelection = () => {
     if (!isEditable || isLocked) return;
 
