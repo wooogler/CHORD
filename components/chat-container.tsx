@@ -15,6 +15,7 @@ import PromptInput from "./prompt-input";
 import ChordInput from "./chord-input";
 
 export type MessageRole = "user" | "assistant" | "representative" | "agent";
+export type ApplyStatus = "applied" | "cancelled" | "deferred" | null;
 export type Message = {
   role: MessageRole;
   content: string;
@@ -26,6 +27,7 @@ export type Message = {
     agentName: string;
     emoji: string;
   }[];
+  applyStatus?: ApplyStatus;
   move?: "left" | "right";
 };
 
@@ -425,6 +427,7 @@ export default function ChatContainer({
           handleSubmitPrompt={handleSubmitPrompt}
           isTextSelected={!!selectedHtml}
           phase={phase}
+          messages={messages}
         />
       ) : (
         <ChordInput

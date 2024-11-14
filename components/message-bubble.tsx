@@ -1,5 +1,5 @@
 import { mapStrToColor } from "@/lib/utils";
-import { Message, MessageRole } from "./chat-container";
+import { ApplyStatus, Message, MessageRole } from "./chat-container";
 import { useEffect, useState } from "react";
 import htmldiff from "node-htmldiff";
 import { Box, Stack } from "@mui/material";
@@ -27,9 +27,6 @@ export default function MessageBubble({
   setPhase: (phase: "prompt" | "editing" | "conversation") => void;
   handleAskAgain: () => void;
 }) {
-  const [applyStatus, setApplyStatus] = useState<
-    "applied" | "cancelled" | "deferred" | null
-  >(null);
   const {
     reactions,
     role,
@@ -38,6 +35,7 @@ export default function MessageBubble({
     editedContentHtml,
     agentName,
     move,
+    applyStatus,
   } = message;
 
   const diffHtml = htmldiff(
@@ -45,10 +43,6 @@ export default function MessageBubble({
     editedContentHtml || "",
     null
   );
-
-  console.log("originalContentHtml", originalContentHtml);
-  console.log("editedContentHtml", editedContentHtml);
-  console.log("diffHtml", diffHtml);
 
   let initialAlignment: "left" | "right";
 
@@ -102,6 +96,15 @@ export default function MessageBubble({
     agentName
   )}`;
 
+  const changeApplyStatus = (status: ApplyStatus) => {
+    setMessages((prevMessages) => {
+      return prevMessages.map((msg) => {
+        if (msg === message) return { ...msg, applyStatus: status };
+        return msg;
+      });
+    });
+  };
+
   const applyChanges = (apply: boolean) => {
     setContentHtml((prevContentHtml: string) => {
       // Create a temporary DOM element
@@ -138,7 +141,7 @@ export default function MessageBubble({
       );
       return messagesWithoutFirstFeedback;
     });
-    setApplyStatus(apply ? "applied" : "cancelled");
+    changeApplyStatus(apply ? "applied" : "cancelled");
     setIsLocked(false);
     setSelectedHtml("");
     setPhase("prompt");
@@ -224,7 +227,7 @@ export default function MessageBubble({
                     <button
                       className="text-red-600 text-xs ml-2"
                       onClick={() => {
-                        setApplyStatus("deferred");
+                        changeApplyStatus("deferred");
                         handleAskAgain();
                       }}
                     >

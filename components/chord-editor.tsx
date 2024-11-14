@@ -102,6 +102,7 @@ export default function ChordEditor({
           isEditable={isEditable}
           toggleEditable={toggleEditable}
         />
+
         <ChatContainer
           selectedHtml={selectedHtml}
           setSelectedHtml={setSelectedHtml}
