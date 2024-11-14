@@ -35,7 +35,8 @@ const WikiViewer: React.FC<WikiViewerProps> = ({
 
   const handleLinkClick = useCallback(
     (event: React.MouseEvent<HTMLDivElement>) => {
-      if (!isEditable && event.target instanceof HTMLAnchorElement) {
+      if (isLocked || isEditable) return;
+      if (event.target instanceof HTMLAnchorElement) {
         event.preventDefault();
         const href = event.target.getAttribute("href");
         if (href) {
