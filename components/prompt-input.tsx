@@ -1,6 +1,7 @@
 import React from "react";
 import FileDownloadIcon from "@mui/icons-material/FileDownload";
 import { Message } from "./chat-container";
+import htmldiff from "node-htmldiff";
 
 interface PromptInputProps {
   userInput: string;
@@ -26,6 +27,12 @@ export default function PromptInput({
       return {
         role: message.role,
         content: message.content,
+        diffHtml:
+          htmldiff(
+            message.originalContentHtml || "",
+            message.editedContentHtml || "",
+            null
+          ) || undefined,
         applyStatus: message.applyStatus,
       };
     });

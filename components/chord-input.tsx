@@ -37,15 +37,15 @@ export default function ChordInput({
         role: message.role,
         content: message.content,
         agentName: message.agentName,
-        move: message.move,
-        applyStatus: message.applyStatus,
-        reactions: message.reactions,
         diffHtml:
           htmldiff(
             message.originalContentHtml || "",
             message.editedContentHtml || "",
             null
           ) || undefined,
+        move: message.move,
+        applyStatus: message.applyStatus,
+        reactions: message.reactions,
       };
     });
     const json = JSON.stringify(outputMessages, null, 2);
