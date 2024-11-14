@@ -191,8 +191,7 @@ export default function MessageBubble({
             }}
           >
             {reactions
-              ?.filter((_, index) => index === 0 || index === 2 || index == 4)
-              .map((reaction, index) => {
+              ?.map((reaction, index) => {
                 return (
                   <Box
                     className={`bg-${mapStrToColor(reaction.agentName)}-200`}
@@ -245,19 +244,18 @@ export default function MessageBubble({
               )}
               {applyStatus && (
                 <div
-                  className={`text-xs font-bold mt-2 ${
-                    applyStatus === "applied"
+                  className={`text-xs font-bold mt-2 ${applyStatus === "applied"
                       ? "text-blue-800"
                       : applyStatus === "cancelled"
-                      ? "text-red-800"
-                      : "text-gray-800"
-                  }`}
+                        ? "text-red-800"
+                        : "text-gray-800"
+                    }`}
                 >
                   {applyStatus === "applied"
                     ? "Changes applied"
                     : applyStatus === "cancelled"
-                    ? "Changes cancelled"
-                    : "Changes deferred"}
+                      ? "Changes cancelled"
+                      : "Changes deferred"}
                 </div>
               )}
             </div>
