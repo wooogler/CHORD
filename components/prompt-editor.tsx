@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import ChatContainer from "./chat-container";
-import WikiViewer from "./wiki-viewer";
+import WikiViewer from "./wiki-viewer copy";
 import EditModeSwitch from "./edit-mode-switch";
 
 export default function PromptEditor({
@@ -91,10 +91,12 @@ export default function PromptEditor({
   return (
     <div className="flex h-full">
       <WikiViewer
-        content={contentHtml}
+        contentHtml={contentHtml}
+        setContentHtml={setContentHtml}
         isEditable={isEditable}
-        handleChange={handleChange}
+        isLocked={isLocked}
         handleSelection={handleSelection}
+        setSelectedHtml={setSelectedHtml}
         articleTitle={articleTitle}
       />
       <div className="flex flex-col h-full w-[500px] flex-shrink-0">

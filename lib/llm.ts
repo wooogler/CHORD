@@ -68,6 +68,8 @@ export async function editArticleWithUserInputOnly({
   articleHtml: string;
   userInput: string;
 }) {
+  console.log("articleHtml", articleHtml);
+  console.log("userInput", userInput);
   try {
     const systemPrompt = `You are editing a part of a Wikipedia article in HTML format based on the user's request. Maintain the original HTML structure, including all HTML tags, while only modifying the content as specified by the user. Do not change or remove any HTML tags. Ensure that your response includes all original HTML tags. Provide your response in the following JSON format:
 
@@ -108,6 +110,8 @@ export async function editArticleWithUserInputOnly({
       console.error("Error parsing JSON:", error);
       throw error;
     }
+
+    console.log("editedHtml", parsedResponse.editedHtml);
 
     return {
       feedback: parsedResponse.feedback,
