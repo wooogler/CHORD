@@ -5,6 +5,7 @@ import ChatContainer from "./chat-container";
 import WikiViewer from "./wiki-viewer";
 import EditModeSwitch from "./edit-mode-switch";
 import useEditorStore from "@/lib/store/editorStore";
+import useChatStore from "@/lib/store/chatStore";
 
 export default function PromptEditor({
   articleHtml,
@@ -14,10 +15,12 @@ export default function PromptEditor({
   articleTitle: string;
 }) {
   const { setContentHtml } = useEditorStore();
+  const { setMessages } = useChatStore();
   const isLocked = useEditorStore((state) => state.isLocked);
 
   useEffect(() => {
     setContentHtml(articleHtml);
+    setMessages([]);
   }, [articleHtml]);
 
   useEffect(() => {

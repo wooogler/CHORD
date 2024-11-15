@@ -1,7 +1,7 @@
 "use server";
 
-import { Message } from "@/components/chat-container";
 import OpenAI from "openai";
+import { Message } from "./store/chatStore";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 

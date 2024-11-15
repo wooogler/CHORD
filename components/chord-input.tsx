@@ -1,36 +1,32 @@
 import React from "react";
-import { Message } from "./chat-container";
 import { mapStrToColor } from "@/lib/utils";
 import htmldiff from "node-htmldiff";
 import FileDownloadIcon from "@mui/icons-material/FileDownload";
+import useChatStore from "@/lib/store/chatStore";
 
 interface ChordInputProps {
   userInput: string;
   setUserInput: (input: string) => void;
-  isLoading: boolean;
-  activeAgent: string | null;
-  setActiveAgent: (agent: string | null) => void;
   handleSubmitReply: () => void;
   handleSubmitSuggestion: () => void;
   handleEditWithActiveAgent: () => void;
-  messages: Message[];
   isTextSelected: boolean;
-  phase: "prompt" | "editing" | "conversation";
 }
 
 export default function ChordInput({
   userInput,
   setUserInput,
-  isLoading,
-  activeAgent,
-  setActiveAgent,
   handleSubmitReply,
   handleSubmitSuggestion,
   handleEditWithActiveAgent,
-  messages,
   isTextSelected,
-  phase,
 }: ChordInputProps) {
+  const messages = useChatStore((state) => state.messages);
+  const isLoading = useChatStore((state) => state.isLoading);
+  const phase = useChatStore((state) => state.phase);
+  const activeAgent = useChatStore((state) => state.activeAgent);
+  const { setActiveAgent } = useChatStore();
+
   const handleExportMessages = () => {
     const outputMessages = messages.map((message) => {
       return {

@@ -14,38 +14,27 @@ import agentProfiles from "@/lib/agentProfiles";
 import PromptInput from "./prompt-input";
 import ChordInput from "./chord-input";
 import useEditorStore from "@/lib/store/editorStore";
-
-export type MessageRole = "user" | "assistant" | "representative" | "agent";
-export type ApplyStatus = "applied" | "cancelled" | "deferred" | null;
-export type Message = {
-  role: MessageRole;
-  content: string;
-  originalContentHtml?: string;
-  editedContentHtml?: string;
-  agentName?: string;
-  activeAgent?: string | null;
-  reactions?: {
-    agentName: string;
-    emoji: string;
-  }[];
-  applyStatus?: ApplyStatus;
-  move?: "left" | "right";
-};
+import useChatStore, { Message, MessageRole } from "@/lib/store/chatStore";
 
 export default function ChatContainer({
   condition,
 }: {
   condition: "prompt" | "chord";
 }) {
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [userInput, setUserInput] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const messages = useChatStore((state) => state.messages);
+  const {
+    setMessages,
+    setIsLoading,
+    setPhase,
+    addUserMessage,
+    addAssistantMessage,
+    changeLastMessageMove,
+    addReactionToMessage,
+  } = useChatStore();
   const [editedHtml, setEditedHtml] = useState("");
   const [cleanedEditedHtml, setCleanedEditedHtml] = useState("");
   const [activeAgent, setActiveAgent] = useState<string | null>(null);
-  const [phase, setPhase] = useState<"prompt" | "editing" | "conversation">(
-    "prompt"
-  );
+  const [userInput, setUserInput] = useState("");
 
   const { setIsLocked } = useEditorStore();
 
@@ -68,13 +57,7 @@ export default function ChatContainer({
     setIsLoading(true);
     setIsLocked(true);
 
-    setMessages((prevMessages) => {
-      const newMessages = [
-        ...prevMessages,
-        { role: "user" as MessageRole, content: userInput },
-      ];
-      return newMessages;
-    });
+    addUserMessage(userInput);
 
     setUserInput("");
 
@@ -92,12 +75,10 @@ export default function ChatContainer({
         content: response.feedback || "No feedback provided",
         originalContentHtml: selectedHtml,
         editedContentHtml: response.editedHtml,
+        createdAt: Date.now(),
       };
 
-      setMessages((prevMessages) => {
-        const newMessages = [...prevMessages, assistantMessage];
-        return newMessages;
-      });
+      addAssistantMessage(assistantMessage);
 
       setPhase("editing");
     } catch (error) {
@@ -113,14 +94,7 @@ export default function ChatContainer({
     setIsLoading(true);
     setIsLocked(true);
 
-    const userMessage: Message = {
-      role: "user",
-      content: userInput,
-    };
-    setMessages((prevMessages) => {
-      const newMessages = [...prevMessages, userMessage];
-      return newMessages;
-    });
+    addUserMessage(userInput);
 
     setUserInput("");
 
@@ -137,12 +111,10 @@ export default function ChatContainer({
         originalContentHtml: selectedHtml,
         editedContentHtml: editingResponse.editedHtml,
         move: "left",
+        createdAt: Date.now(),
       };
 
-      setMessages((prevMessages) => {
-        const newMessages = [...prevMessages, representativeMessage];
-        return newMessages;
-      });
+      addAssistantMessage(representativeMessage);
       setPhase("editing");
 
       const cleanedEditedHtml = cleanDiffHtml(
@@ -179,18 +151,16 @@ export default function ChatContainer({
           role: "agent",
           agentName: agentName,
           content: agentResponse || "",
+          createdAt: Date.now(),
         };
 
-        setMessages((prevMessages) => {
-          const newMessages = [...prevMessages, agentMessage];
-          getReactionsToMessage(
-            editedHtml,
-            agentResponse ?? "",
-            newMessages.length - 1,
-            agentName
-          );
-          return newMessages;
-        });
+        addAssistantMessage(agentMessage);
+        getReactionsToMessage(
+          editedHtml,
+          agentResponse ?? "",
+          agentMessage.createdAt,
+          agentName
+        );
       } catch (error) {
         console.error(error);
       }
@@ -208,7 +178,6 @@ export default function ChatContainer({
     const latestMessageFromActiveAgent = messages.findLast(
       (message) => message.agentName === activeAgent
     );
-    console.log("latestMessageFromActiveAgent", latestMessageFromActiveAgent);
 
     if (
       latestMessageFromActiveAgent &&
@@ -225,6 +194,7 @@ export default function ChatContainer({
       role: "user",
       content: userInput,
       activeAgent: activeAgent,
+      createdAt: Date.now(),
     };
     updatedMessages.push(userMessage);
 
@@ -259,18 +229,15 @@ export default function ChatContainer({
         chatHistory: latestMessagesWithActiveAgent,
         isMultiAgentChat: false,
       });
-      setMessages((prevMessages) => {
-        const newMessages = [
-          ...prevMessages,
-          {
-            role: "agent" as MessageRole,
-            agentName: activeAgent || "Agent",
-            content: response || "",
-            activeAgent: activeAgent,
-          },
-        ];
-        return newMessages;
-      });
+
+      const agentMessage: Message = {
+        role: "agent" as MessageRole,
+        agentName: activeAgent || "Agent",
+        content: response || "",
+        activeAgent: activeAgent,
+        createdAt: Date.now(),
+      };
+      addAssistantMessage(agentMessage);
     } catch (error) {
       console.error(error);
     } finally {
@@ -308,12 +275,10 @@ export default function ChatContainer({
       originalContentHtml: selectedHtml,
       editedContentHtml: editingResponse.editedHtml,
       move: "right",
+      createdAt: Date.now(),
     };
 
-    setMessages((prevMessages) => {
-      const newMessages = [...prevMessages, representativeMessage];
-      return newMessages;
-    });
+    addAssistantMessage(representativeMessage);
 
     const cleanedEditedHtml = cleanDiffHtml(
       htmldiff(selectedHtml, editingResponse.editedHtml)
@@ -325,10 +290,7 @@ export default function ChatContainer({
   };
 
   const handleAskAgain = () => {
-    setMessages((prevMessages) => {
-      const lastMessage = prevMessages[prevMessages.length - 1];
-      return [...prevMessages.slice(0, -1), { ...lastMessage, move: "left" }];
-    });
+    changeLastMessageMove("left");
     setPhase("editing");
     getFeedbackFromAgents(cleanedEditedHtml);
   };
@@ -336,7 +298,7 @@ export default function ChatContainer({
   const getReactionsToMessage = async (
     editedHtml: string,
     message: string,
-    messageIndex: number,
+    messageCreatedAt: number,
     originalAgent: string
   ) => {
     const agents = agentProfiles;
@@ -355,18 +317,10 @@ export default function ChatContainer({
 
           console.log(agentResponse);
 
-          setMessages((prevMessages) => {
-            if (prevMessages[messageIndex].reactions) {
-              prevMessages[messageIndex].reactions.push({
-                agentName: agentName,
-                emoji: agentResponse ?? "X",
-              });
-            } else {
-              prevMessages[messageIndex].reactions = [
-                { agentName: agentName, emoji: agentResponse ?? "X" },
-              ];
-            }
-            return [...prevMessages];
+          addReactionToMessage({
+            messageCreatedAt,
+            agentName,
+            emoji: agentResponse ?? "X",
           });
         } catch (error) {
           console.error(error);
@@ -403,11 +357,7 @@ export default function ChatContainer({
               >
                 <MessageBubble
                   message={message}
-                  setActiveAgent={setActiveAgent}
-                  setMessages={setMessages}
-                  activeAgent={activeAgent}
                   isLastEditMessage={message === lastEditMessage}
-                  setPhase={setPhase}
                   handleAskAgain={handleAskAgain}
                 />
               </div>
@@ -420,25 +370,17 @@ export default function ChatContainer({
         <PromptInput
           userInput={userInput}
           setUserInput={setUserInput}
-          isLoading={isLoading}
           handleSubmitPrompt={handleSubmitPrompt}
           isTextSelected={!!selectedHtml}
-          phase={phase}
-          messages={messages}
         />
       ) : (
         <ChordInput
           userInput={userInput}
           setUserInput={setUserInput}
-          isLoading={isLoading}
-          activeAgent={activeAgent}
-          setActiveAgent={setActiveAgent}
           handleSubmitReply={handleSubmitReply}
           handleSubmitSuggestion={handleSubmitSuggestion}
           handleEditWithActiveAgent={handleEditWithActiveAgent}
-          messages={messages}
           isTextSelected={!!selectedHtml}
-          phase={phase}
         />
       )}
     </div>

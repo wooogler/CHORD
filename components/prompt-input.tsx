@@ -1,27 +1,25 @@
 import React from "react";
 import FileDownloadIcon from "@mui/icons-material/FileDownload";
-import { Message } from "./chat-container";
 import htmldiff from "node-htmldiff";
+import useChatStore from "@/lib/store/chatStore";
 
 interface PromptInputProps {
   userInput: string;
   setUserInput: (input: string) => void;
-  isLoading: boolean;
   handleSubmitPrompt: () => void;
   isTextSelected: boolean;
-  phase: "prompt" | "editing" | "conversation";
-  messages: Message[];
 }
 
 export default function PromptInput({
   userInput,
   setUserInput,
-  isLoading,
   handleSubmitPrompt,
   isTextSelected,
-  phase,
-  messages,
 }: PromptInputProps) {
+  const messages = useChatStore((state) => state.messages);
+  const isLoading = useChatStore((state) => state.isLoading);
+  const phase = useChatStore((state) => state.phase);
+
   const handleExportMessages = () => {
     const outputMessages = messages.map((message) => {
       return {

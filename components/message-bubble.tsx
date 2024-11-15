@@ -1,29 +1,29 @@
 import { mapStrToColor } from "@/lib/utils";
-import { ApplyStatus, Message, MessageRole } from "./chat-container";
 import { useEffect, useState } from "react";
 import htmldiff from "node-htmldiff";
 import { Box, Stack } from "@mui/material";
 import useEditorStore from "@/lib/store/editorStore";
+import useChatStore, { Message, MessageRole } from "@/lib/store/chatStore";
 
 export default function MessageBubble({
   message,
-  setActiveAgent,
-  activeAgent,
   isLastEditMessage,
-  setMessages,
-  setPhase,
   handleAskAgain,
 }: {
   message: Message;
-  setActiveAgent: (agentName: string) => void;
-  activeAgent: string | null;
   isLastEditMessage: boolean;
-  setMessages: React.Dispatch<React.SetStateAction<Message[]>>;
-  setPhase: (phase: "prompt" | "editing" | "conversation") => void;
   handleAskAgain: () => void;
 }) {
   const { setIsLocked, setSelectedHtml, updateHighlightedContentHtml } =
     useEditorStore();
+  const {
+    setPhase,
+    setActiveAgent,
+    changeMessageApplyStatus,
+    removeMessagesAfter,
+  } = useChatStore();
+  const activeAgent = useChatStore((state) => state.activeAgent);
+
   const {
     reactions,
     role,
@@ -93,29 +93,24 @@ export default function MessageBubble({
     agentName
   )}`;
 
-  const changeApplyStatus = (status: ApplyStatus) => {
-    setMessages((prevMessages) => {
-      return prevMessages.map((msg) => {
-        if (msg === message) return { ...msg, applyStatus: status };
-        return msg;
-      });
-    });
-  };
-
   const applyChanges = (apply: boolean) => {
     updateHighlightedContentHtml({
       editedHtml: message.editedContentHtml,
       originalHtml: message.originalContentHtml,
       apply,
     });
-    setMessages((prevMessages) => {
-      const newMessages = [...prevMessages];
-      const messagesWithoutFirstFeedback = newMessages.filter(
-        (msg) => msg.role !== "agent" || msg.activeAgent
-      );
-      return messagesWithoutFirstFeedback;
+    removeMessagesAfter({ messageCreatedAt: message.createdAt });
+    // setMessages((prevMessages) => {
+    //   const newMessages = [...prevMessages];
+    //   const messagesWithoutFirstFeedback = newMessages.filter(
+    //     (msg) => msg.role !== "agent" || msg.activeAgent
+    //   );
+    //   return messagesWithoutFirstFeedback;
+    // });
+    changeMessageApplyStatus({
+      messageCreatedAt: message.createdAt,
+      applyStatus: apply ? "applied" : "cancelled",
     });
-    changeApplyStatus(apply ? "applied" : "cancelled");
     setIsLocked(false);
     setSelectedHtml("");
     setPhase("prompt");
@@ -199,7 +194,10 @@ export default function MessageBubble({
                     <button
                       className="text-red-600 text-xs ml-2"
                       onClick={() => {
-                        changeApplyStatus("deferred");
+                        changeMessageApplyStatus({
+                          messageCreatedAt: message.createdAt,
+                          applyStatus: "deferred",
+                        });
                         handleAskAgain();
                       }}
                     >
