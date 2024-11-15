@@ -13,6 +13,7 @@ import { cleanDiffHtml, mapStrToColor } from "@/lib/utils";
 import agentProfiles from "@/lib/agentProfiles";
 import PromptInput from "./prompt-input";
 import ChordInput from "./chord-input";
+import useEditorStore from "@/lib/store/editorStore";
 
 export type MessageRole = "user" | "assistant" | "representative" | "agent";
 export type ApplyStatus = "applied" | "cancelled" | "deferred" | null;
@@ -32,17 +33,9 @@ export type Message = {
 };
 
 export default function ChatContainer({
-  selectedHtml,
-  setSelectedHtml,
-  setContentHtml,
   condition,
-  setIsLocked,
 }: {
-  selectedHtml: string;
-  setSelectedHtml: React.Dispatch<React.SetStateAction<string>>;
-  setContentHtml: React.Dispatch<React.SetStateAction<string>>;
   condition: "prompt" | "chord";
-  setIsLocked: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [userInput, setUserInput] = useState("");
@@ -53,6 +46,10 @@ export default function ChatContainer({
   const [phase, setPhase] = useState<"prompt" | "editing" | "conversation">(
     "prompt"
   );
+
+  const { setContentHtml, setIsLocked, setSelectedHtml } = useEditorStore();
+
+  const selectedHtml = useEditorStore((state) => state.selectedHtml);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollToBottom = () => {
@@ -409,10 +406,7 @@ export default function ChatContainer({
                   setActiveAgent={setActiveAgent}
                   setMessages={setMessages}
                   activeAgent={activeAgent}
-                  setContentHtml={setContentHtml}
                   isLastEditMessage={message === lastEditMessage}
-                  setIsLocked={setIsLocked}
-                  setSelectedHtml={setSelectedHtml}
                   setPhase={setPhase}
                   handleAskAgain={handleAskAgain}
                 />

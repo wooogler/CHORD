@@ -1,15 +1,10 @@
 import React, { useCallback, useEffect, useRef } from "react";
 import * as cheerio from "cheerio";
 import ContentEditable, { ContentEditableEvent } from "react-contenteditable";
+import useEditorStore from "@/lib/store/editorStore";
 
 interface WikiViewerProps {
-  contentHtml: string;
-  setContentHtml: (html: string) => void;
-  setSelectedHtml: (html: string) => void;
-  isEditable: boolean;
-  isLocked: boolean;
   articleTitle: string;
-  handleSelection?: () => void;
 }
 
 const modifyWikiHtml = (htmlString: string) => {
@@ -23,14 +18,12 @@ const modifyWikiHtml = (htmlString: string) => {
   return $.html();
 };
 
-const WikiViewer: React.FC<WikiViewerProps> = ({
-  contentHtml,
-  setContentHtml,
-  setSelectedHtml,
-  isEditable,
-  isLocked,
-  articleTitle,
-}) => {
+const WikiViewer: React.FC<WikiViewerProps> = ({ articleTitle }) => {
+  const { setContentHtml, setSelectedHtml } = useEditorStore();
+  const contentHtml = useEditorStore((state) => state.contentHtml);
+  const isLocked = useEditorStore((state) => state.isLocked);
+  const isEditable = useEditorStore((state) => state.isEditable);
+
   const contentEditableRef = useRef<string>(modifyWikiHtml(contentHtml));
 
   const handleLinkClick = useCallback(

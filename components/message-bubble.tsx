@@ -3,30 +3,31 @@ import { ApplyStatus, Message, MessageRole } from "./chat-container";
 import { useEffect, useState } from "react";
 import htmldiff from "node-htmldiff";
 import { Box, Stack } from "@mui/material";
+import useEditorStore from "@/lib/store/editorStore";
 
 export default function MessageBubble({
   message,
   setActiveAgent,
   activeAgent,
-  setContentHtml,
   isLastEditMessage,
-  setIsLocked,
   setMessages,
-  setSelectedHtml,
   setPhase,
   handleAskAgain,
 }: {
   message: Message;
   setActiveAgent: (agentName: string) => void;
   activeAgent: string | null;
-  setContentHtml: (value: React.SetStateAction<string>) => void;
   isLastEditMessage: boolean;
-  setIsLocked: (value: React.SetStateAction<boolean>) => void;
   setMessages: React.Dispatch<React.SetStateAction<Message[]>>;
-  setSelectedHtml: (value: React.SetStateAction<string>) => void;
   setPhase: (phase: "prompt" | "editing" | "conversation") => void;
   handleAskAgain: () => void;
 }) {
+  const {
+    setContentHtml,
+    setIsLocked,
+    setSelectedHtml,
+    updateHighlightedContentHtml,
+  } = useEditorStore();
   const {
     reactions,
     role,
@@ -106,33 +107,10 @@ export default function MessageBubble({
   };
 
   const applyChanges = (apply: boolean) => {
-    setContentHtml((prevContentHtml: string) => {
-      // Create a temporary DOM element
-      const tempDiv = document.createElement("div");
-      tempDiv.innerHTML = prevContentHtml;
-
-      // Find the span element with the highlight-yellow class
-      const highlightedSpan = tempDiv.querySelector("span.highlight-yellow");
-
-      if (highlightedSpan) {
-        // Create a new span element
-        const newSpan = document.createElement("span");
-        if (apply) {
-          newSpan.className = "highlight-green";
-          newSpan.innerHTML = message.editedContentHtml || "";
-        } else {
-          newSpan.innerHTML = message.originalContentHtml || "";
-        }
-
-        // Replace the existing element with the new one
-        highlightedSpan.parentNode?.replaceChild(newSpan, highlightedSpan);
-
-        // Return the modified HTML
-        return tempDiv.innerHTML;
-      }
-
-      // If no matching element is found, return the original content
-      return prevContentHtml;
+    updateHighlightedContentHtml({
+      editedHtml: message.editedContentHtml,
+      originalHtml: message.originalContentHtml,
+      apply,
     });
     setMessages((prevMessages) => {
       const newMessages = [...prevMessages];
@@ -190,22 +168,21 @@ export default function MessageBubble({
               transform: "translate(-100%, -50%)",
             }}
           >
-            {reactions
-              ?.map((reaction, index) => {
-                return (
-                  <Box
-                    className={`bg-${mapStrToColor(reaction.agentName)}-200`}
-                    key={index}
-                    sx={{
-                      width: 24,
-                      height: 24,
-                      border: "1px solid black",
-                    }}
-                  >
-                    {reaction.emoji}
-                  </Box>
-                );
-              })}
+            {reactions?.map((reaction, index) => {
+              return (
+                <Box
+                  className={`bg-${mapStrToColor(reaction.agentName)}-200`}
+                  key={index}
+                  sx={{
+                    width: 24,
+                    height: 24,
+                    border: "1px solid black",
+                  }}
+                >
+                  {reaction.emoji}
+                </Box>
+              );
+            })}
           </Stack>
           {["representative", "assistant"].includes(role) && (
             <div className=" bg-white p-2 rounded-lg mt-2">
@@ -244,18 +221,19 @@ export default function MessageBubble({
               )}
               {applyStatus && (
                 <div
-                  className={`text-xs font-bold mt-2 ${applyStatus === "applied"
+                  className={`text-xs font-bold mt-2 ${
+                    applyStatus === "applied"
                       ? "text-blue-800"
                       : applyStatus === "cancelled"
-                        ? "text-red-800"
-                        : "text-gray-800"
-                    }`}
+                      ? "text-red-800"
+                      : "text-gray-800"
+                  }`}
                 >
                   {applyStatus === "applied"
                     ? "Changes applied"
                     : applyStatus === "cancelled"
-                      ? "Changes cancelled"
-                      : "Changes deferred"}
+                    ? "Changes cancelled"
+                    : "Changes deferred"}
                 </div>
               )}
             </div>

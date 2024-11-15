@@ -1,15 +1,15 @@
 import React from "react";
 import { FormControlLabel, Switch } from "@mui/material";
+import useEditorStore from "@/lib/store/editorStore";
 
-interface EditModeSwitchProps {
-  isEditable: boolean;
-  toggleEditable: () => void;
-}
+const EditModeSwitch: React.FC = () => {
+  const isEditable = useEditorStore((state) => state.isEditable);
+  const { setIsEditable } = useEditorStore();
 
-const EditModeSwitch: React.FC<EditModeSwitchProps> = ({
-  isEditable,
-  toggleEditable,
-}) => {
+  const toggleEditable = () => {
+    setIsEditable(!isEditable);
+  };
+
   return (
     <FormControlLabel
       control={

@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import BaseWikiViewer from "./base-wiki-viewer";
 import EditModeSwitch from "./edit-mode-switch";
+import useEditorStore from "@/lib/store/editorStore";
 export default function BaseEditor({
   articleHtml,
   articleTitle,
@@ -10,12 +11,9 @@ export default function BaseEditor({
   articleHtml: string;
   articleTitle: string;
 }) {
-  const [contentHtml, setContentHtml] = useState(articleHtml);
-  const [isEditable, setIsEditable] = useState(true);
-
-  const toggleEditable = () => {
-    setIsEditable(!isEditable);
-  };
+  const { setContentHtml } = useEditorStore();
+  const isEditable = useEditorStore((state) => state.isEditable);
+  const contentHtml = useEditorStore((state) => state.contentHtml);
 
   useEffect(() => {
     setContentHtml(articleHtml);
@@ -29,10 +27,7 @@ export default function BaseEditor({
         isEditable={isEditable}
       />
       <div className="flex flex-col h-full min-h-0 w-[500px] flex-shrink-0">
-        <EditModeSwitch
-          isEditable={isEditable}
-          toggleEditable={toggleEditable}
-        />
+        <EditModeSwitch />
       </div>
     </div>
   );
