@@ -22,12 +22,8 @@ export default function MessageBubble({
   setPhase: (phase: "prompt" | "editing" | "conversation") => void;
   handleAskAgain: () => void;
 }) {
-  const {
-    setContentHtml,
-    setIsLocked,
-    setSelectedHtml,
-    updateHighlightedContentHtml,
-  } = useEditorStore();
+  const { setIsLocked, setSelectedHtml, updateHighlightedContentHtml } =
+    useEditorStore();
   const {
     reactions,
     role,

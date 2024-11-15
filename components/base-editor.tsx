@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import BaseWikiViewer from "./base-wiki-viewer";
 import EditModeSwitch from "./edit-mode-switch";
 import useEditorStore from "@/lib/store/editorStore";

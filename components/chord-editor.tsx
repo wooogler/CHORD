@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import ChatContainer from "./chat-container";
 import WikiViewer from "./wiki-viewer";
 import EditModeSwitch from "./edit-mode-switch";

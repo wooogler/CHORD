@@ -47,7 +47,7 @@ export default function ChatContainer({
     "prompt"
   );
 
-  const { setContentHtml, setIsLocked, setSelectedHtml } = useEditorStore();
+  const { setIsLocked } = useEditorStore();
 
   const selectedHtml = useEditorStore((state) => state.selectedHtml);
 

@@ -45,7 +45,7 @@ const WikiViewer: React.FC<WikiViewerProps> = ({ articleTitle }) => {
         }
       }
     },
-    [isEditable]
+    [isEditable, isLocked]
   );
 
   const handleParagraphSelection = (e: React.MouseEvent<HTMLElement>) => {
