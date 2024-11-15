@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import ChatContainer from "./chat-container";
-import WikiViewer from "./wiki-viewer copy";
+import WikiViewer from "./wiki-viewer";
 import EditModeSwitch from "./edit-mode-switch";
 
 export default function PromptEditor({

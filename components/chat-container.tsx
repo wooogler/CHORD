@@ -82,6 +82,9 @@ export default function ChatContainer({
     setUserInput("");
 
     try {
+      console.log("selectedHtml", selectedHtml);
+      console.log("userInput", userInput);
+
       const response = await editArticleWithUserInputOnly({
         articleHtml: selectedHtml,
         userInput: userInput,

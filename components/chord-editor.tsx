@@ -91,9 +91,11 @@ export default function ChordEditor({
   return (
     <div className="flex h-full">
       <WikiViewer
-        content={contentHtml}
+        contentHtml={contentHtml}
         isEditable={isEditable}
-        handleChange={handleChange}
+        setContentHtml={setContentHtml}
+        setSelectedHtml={setSelectedHtml}
+        isLocked={isLocked}
         handleSelection={handleSelection}
         articleTitle={articleTitle}
       />

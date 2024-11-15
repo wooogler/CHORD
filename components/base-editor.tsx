@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import WikiViewer from "./wiki-viewer";
+import BaseWikiViewer from "./base-wiki-viewer";
 import EditModeSwitch from "./edit-mode-switch";
 export default function BaseEditor({
   articleHtml,
@@ -10,7 +10,7 @@ export default function BaseEditor({
   articleHtml: string;
   articleTitle: string;
 }) {
-  const [content, setContent] = useState(articleHtml);
+  const [contentHtml, setContentHtml] = useState(articleHtml);
   const [isEditable, setIsEditable] = useState(true);
 
   const toggleEditable = () => {
@@ -18,21 +18,15 @@ export default function BaseEditor({
   };
 
   useEffect(() => {
-    setContent(articleHtml);
+    setContentHtml(articleHtml);
   }, [articleHtml]);
-
-  const handleChange = (evt: React.FormEvent<HTMLDivElement>) => {
-    setContent(evt.currentTarget.innerHTML);
-    console.log(content);
-  };
 
   return (
     <div className="flex h-full">
-      <WikiViewer
+      <BaseWikiViewer
         articleTitle={articleTitle}
-        content={content}
+        contentHtml={contentHtml}
         isEditable={isEditable}
-        handleChange={handleChange}
       />
       <div className="flex flex-col h-full min-h-0 w-[500px] flex-shrink-0">
         <EditModeSwitch

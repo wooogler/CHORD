@@ -1,25 +1,42 @@
-import { cleanWikiHtml } from "@/lib/utils";
-import React, { useCallback, useEffect } from "react";
+import React, { useCallback, useEffect, useRef } from "react";
+import * as cheerio from "cheerio";
 import ContentEditable, { ContentEditableEvent } from "react-contenteditable";
 
 interface WikiViewerProps {
-  content: string;
+  contentHtml: string;
+  setContentHtml: (html: string) => void;
+  setSelectedHtml: (html: string) => void;
   isEditable: boolean;
-  handleChange?: (evt: React.FormEvent<HTMLDivElement>) => void;
+  isLocked: boolean;
   articleTitle: string;
   handleSelection?: () => void;
 }
 
+const modifyWikiHtml = (htmlString: string) => {
+  const $ = cheerio.load(htmlString);
+  $("sup").remove();
+  $("p:not(.wiki-paragraph)").after(
+    '<p class="wiki-paragraph empty-paragraph"></p>'
+  );
+  $("p").addClass("wiki-paragraph");
+  $("a").addClass("wiki-link");
+  return $.html();
+};
+
 const WikiViewer: React.FC<WikiViewerProps> = ({
-  content,
+  contentHtml,
+  setContentHtml,
+  setSelectedHtml,
   isEditable,
-  handleChange,
+  isLocked,
   articleTitle,
-  handleSelection,
 }) => {
+  const contentEditableRef = useRef<string>(modifyWikiHtml(contentHtml));
+
   const handleLinkClick = useCallback(
     (event: React.MouseEvent<HTMLDivElement>) => {
-      if (!isEditable && event.target instanceof HTMLAnchorElement) {
+      if (isLocked || isEditable) return;
+      if (event.target instanceof HTMLAnchorElement) {
         event.preventDefault();
         const href = event.target.getAttribute("href");
         if (href) {
@@ -38,6 +55,50 @@ const WikiViewer: React.FC<WikiViewerProps> = ({
     [isEditable]
   );
 
+  const handleParagraphSelection = (e: React.MouseEvent<HTMLElement>) => {
+    if (isLocked) return;
+    const paragraph = e.target as HTMLElement;
+    if (paragraph.tagName.toLowerCase() === "p") {
+      const editor = document.getElementById("prompt-editor-content");
+      if (editor) {
+        editor.querySelectorAll('p[contenteditable="true"]').forEach((p) => {
+          p.setAttribute("contenteditable", "false");
+        });
+
+        editor
+          .querySelectorAll(
+            ".highlight-yellow, .highlight-gray, .highlight-green"
+          )
+          .forEach((highlight) => {
+            const parent = highlight.parentNode;
+            while (highlight.firstChild) {
+              parent?.insertBefore(highlight.firstChild, highlight);
+            }
+            parent?.removeChild(highlight);
+          });
+      }
+
+      const highlightSpan = document.createElement("span");
+      highlightSpan.className = "highlight-yellow";
+
+      if (!paragraph.textContent?.trim()) {
+        highlightSpan.textContent = " ";
+      } else {
+        while (paragraph.firstChild) {
+          highlightSpan.appendChild(paragraph.firstChild);
+        }
+      }
+
+      paragraph.appendChild(highlightSpan);
+      paragraph.setAttribute("contenteditable", "true");
+
+      setContentHtml(
+        document.getElementById("prompt-editor-content")?.innerHTML || ""
+      );
+      setSelectedHtml(highlightSpan.innerHTML || "");
+    }
+  };
+
   useEffect(() => {
     const removeEditSections = () => {
       const editSections = document.querySelectorAll(".mw-editsection");
@@ -45,20 +106,41 @@ const WikiViewer: React.FC<WikiViewerProps> = ({
     };
 
     removeEditSections();
-  }, [content]);
+  }, [contentHtml]);
+
+  const handleContentChange = (evt: ContentEditableEvent) => {
+    if (isLocked) return;
+
+    contentEditableRef.current = evt.target.value;
+
+    const editor = document.getElementById("prompt-editor-content");
+    if (editor) {
+      const emptyParagraphs = editor.querySelectorAll(".empty-paragraph");
+      emptyParagraphs.forEach((p) => {
+        if (p.textContent?.trim()) {
+          p.classList.remove("empty-paragraph");
+        }
+      });
+    }
+  };
 
   return (
-    <div className="overflow-auto" onClick={handleLinkClick}>
+    <div
+      className="overflow-auto"
+      onClick={(e) => {
+        handleLinkClick(e);
+        handleParagraphSelection(e);
+      }}
+    >
       <h1 id="firstHeading" className="firstHeading mw-first-heading">
         <i>{articleTitle}</i>
       </h1>
       <ContentEditable
         className="p-4 focus:outline-none"
         id="prompt-editor-content"
-        html={cleanWikiHtml(content)}
-        disabled={!isEditable}
-        onChange={(evt: ContentEditableEvent) => handleChange?.(evt)}
-        onMouseUp={handleSelection}
+        html={modifyWikiHtml(contentHtml)}
+        disabled={true}
+        onChange={handleContentChange}
       />
     </div>
   );
