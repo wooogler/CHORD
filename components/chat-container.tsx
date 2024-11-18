@@ -212,10 +212,16 @@ export default function ChatContainer({
     try {
       const latestMessagesWithActiveAgent = messages.reduceRight(
         (acc: Message[], curr) => {
-          if (acc.length === 0 && curr.activeAgent === activeAgent) {
+          if (
+            acc.length === 0 &&
+            (curr.agentName === activeAgent || curr.activeAgent === activeAgent)
+          ) {
             return [curr];
           }
-          if (acc.length > 0 && curr.activeAgent === activeAgent) {
+          if (
+            acc.length > 0 &&
+            (curr.agentName === activeAgent || curr.activeAgent === activeAgent)
+          ) {
             return [curr, ...acc];
           }
           if (acc.length > 0) {
