@@ -16,7 +16,7 @@ export default function BaseEditor({
   const contentHtml = useEditorStore((state) => state.contentHtml);
 
   useEffect(() => {
-    setContentHtml(articleHtml);
+    setContentHtml(articleHtml, "LOAD_ARTICLE");
   }, [articleHtml]);
 
   return (
@@ -27,7 +27,7 @@ export default function BaseEditor({
         isEditable={isEditable}
       />
       <div className="flex flex-col h-full min-h-0 w-[500px] flex-shrink-0">
-        <EditModeSwitch />
+        <EditModeSwitch isBaseEditor={true} />
       </div>
     </div>
   );

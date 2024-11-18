@@ -100,13 +100,6 @@ export default function MessageBubble({
       apply,
     });
     removeMessagesAfter({ messageCreatedAt: message.createdAt });
-    // setMessages((prevMessages) => {
-    //   const newMessages = [...prevMessages];
-    //   const messagesWithoutFirstFeedback = newMessages.filter(
-    //     (msg) => msg.role !== "agent" || msg.activeAgent
-    //   );
-    //   return messagesWithoutFirstFeedback;
-    // });
     changeMessageApplyStatus({
       messageCreatedAt: message.createdAt,
       applyStatus: apply ? "applied" : "cancelled",
@@ -215,18 +208,19 @@ export default function MessageBubble({
               )}
               {applyStatus && (
                 <div
-                  className={`text-xs font-bold mt-2 ${applyStatus === "applied"
-                    ? "text-blue-800"
-                    : applyStatus === "cancelled"
+                  className={`text-xs font-bold mt-2 ${
+                    applyStatus === "applied"
+                      ? "text-blue-800"
+                      : applyStatus === "cancelled"
                       ? "text-red-800"
                       : "text-gray-800"
-                    }`}
+                  }`}
                 >
                   {applyStatus === "applied"
                     ? "Changes applied"
                     : applyStatus === "cancelled"
-                      ? "Changes cancelled"
-                      : "Changes deferred"}
+                    ? "Changes cancelled"
+                    : "Changes deferred"}
                 </div>
               )}
             </div>

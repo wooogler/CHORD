@@ -27,32 +27,6 @@ export default function ChordInput({
   const activeAgent = useChatStore((state) => state.activeAgent);
   const { setActiveAgent } = useChatStore();
 
-  const handleExportMessages = () => {
-    const outputMessages = messages.map((message) => {
-      return {
-        role: message.role,
-        content: message.content,
-        agentName: message.agentName,
-        diffHtml:
-          htmldiff(
-            message.originalContentHtml || "",
-            message.editedContentHtml || "",
-            null
-          ) || undefined,
-        move: message.move,
-        applyStatus: message.applyStatus,
-        reactions: message.reactions,
-      };
-    });
-    const json = JSON.stringify(outputMessages, null, 2);
-    const blob = new Blob([json], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "messages-chord.json";
-    a.click();
-  };
-
   return (
     <div
       className={`flex flex-col p-4 rounded-lg ${
@@ -84,12 +58,6 @@ export default function ChordInput({
       />
 
       <div className="flex items-center space-x-2">
-        <button
-          onClick={handleExportMessages}
-          className="bg-gray-500 text-white px-4 py-2 rounded h-10 w-10 flex items-center justify-center"
-        >
-          <FileDownloadIcon />
-        </button>
         {activeAgent ? (
           <>
             <button

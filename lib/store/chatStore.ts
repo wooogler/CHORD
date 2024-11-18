@@ -2,6 +2,11 @@ import { create } from "zustand";
 
 export type MessageRole = "user" | "assistant" | "representative" | "agent";
 export type ApplyStatus = "applied" | "cancelled" | "deferred" | null;
+
+type Reaction = {
+  agentName: string;
+  emoji: string;
+};
 export type Message = {
   role: MessageRole;
   content: string;
@@ -9,21 +14,20 @@ export type Message = {
   editedContentHtml?: string;
   agentName?: string;
   activeAgent?: string | null;
-  reactions?: {
-    agentName: string;
-    emoji: string;
-  }[];
+  reactions?: Reaction[];
   applyStatus?: ApplyStatus;
   move?: "left" | "right";
   createdAt: number;
+  removedAt?: number;
 };
 
 interface ChatState {
   messages: Message[];
+  messageLogs: Message[];
   activeAgent: string | null;
   isLoading: boolean;
   phase: "prompt" | "editing" | "conversation";
-  setMessages: (messages: Message[]) => void;
+  emptyChatStore: () => void;
   addUserMessage: (userMessage: Message) => void;
   addAssistantMessage: (assistantMessage: Message) => void;
   setActiveAgent: (agent: string | null) => void;
@@ -35,14 +39,12 @@ interface ChatState {
     messageCreatedAt: number;
     applyStatus: ApplyStatus;
   }) => void;
-  addReactionToMessage: ({
+  addReactionsToMessage: ({
     messageCreatedAt,
-    agentName,
-    emoji,
+    reactions,
   }: {
     messageCreatedAt: number;
-    agentName: string;
-    emoji: string;
+    reactions: Reaction[];
   }) => void;
   removeMessagesAfter: ({
     messageCreatedAt,
@@ -51,73 +53,92 @@ interface ChatState {
   }) => void;
   setIsLoading: (isLoading: boolean) => void;
   setPhase: (phase: "prompt" | "editing" | "conversation") => void;
+  getMessageLogs: () => Message[];
 }
 
-const useChatStore = create<ChatState>((set) => ({
+const useChatStore = create<ChatState>((set, get) => ({
   messages: [],
+  messageLogs: [],
   activeAgent: null,
   isLoading: false,
   phase: "prompt",
-  setMessages: (messages) => set({ messages }),
+  emptyChatStore: () => set({ messages: [], messageLogs: [] }),
   addUserMessage: (userMessage) =>
     set((state) => ({
       messages: [...state.messages, userMessage],
+      messageLogs: [...state.messageLogs, userMessage],
     })),
   addAssistantMessage: (assistantMessage) =>
     set((state) => ({
       messages: [...state.messages, assistantMessage],
+      messageLogs: [...state.messageLogs, assistantMessage],
     })),
   changeLastMessageMove: (move: "left" | "right") =>
     set((state) => {
       const lastMessage = state.messages[state.messages.length - 1];
+      const updatedMessage = { ...lastMessage, move };
       return {
-        messages: [...state.messages.slice(0, -1), { ...lastMessage, move }],
+        messages: [...state.messages.slice(0, -1), updatedMessage],
+        messageLogs: state.messageLogs.map((msg) =>
+          msg.createdAt === lastMessage.createdAt ? updatedMessage : msg
+        ),
       };
     }),
-  changeMessageApplyStatus: ({
-    messageCreatedAt,
-    applyStatus,
-  }: {
-    messageCreatedAt: number;
-    applyStatus: ApplyStatus;
-  }) =>
+  changeMessageApplyStatus: ({ messageCreatedAt, applyStatus }) =>
     set((state) => {
-      const message = state.messages.find(
-        (m) => m.createdAt === messageCreatedAt
+      const updatedMessages = state.messages.map((msg) =>
+        msg.createdAt === messageCreatedAt ? { ...msg, applyStatus } : msg
       );
-      if (message) {
-        message.applyStatus = applyStatus;
-      }
-      return { messages: state.messages };
+      const updatedLogs = state.messageLogs.map((msg) =>
+        msg.createdAt === messageCreatedAt ? { ...msg, applyStatus } : msg
+      );
+      return {
+        messages: updatedMessages,
+        messageLogs: updatedLogs,
+      };
     }),
-  addReactionToMessage: ({
-    messageCreatedAt,
-    agentName,
-    emoji,
-  }: {
-    messageCreatedAt: number;
-    agentName: string;
-    emoji: string;
-  }) =>
+  removeMessagesAfter: ({ messageCreatedAt }) =>
     set((state) => {
-      const message = state.messages.find(
-        (m) => m.createdAt === messageCreatedAt
+      const removedAt = Date.now();
+      const updatedLogs = state.messageLogs.map((msg) =>
+        msg.createdAt > messageCreatedAt ? { ...msg, removedAt } : msg
       );
-      if (message) {
-        message.reactions = [
-          ...(message.reactions || []),
-          { agentName, emoji },
-        ];
-      }
-      return { messages: state.messages };
+      return {
+        messages: state.messages.filter((m) => m.createdAt <= messageCreatedAt),
+        messageLogs: updatedLogs,
+      };
     }),
-  removeMessagesAfter: ({ messageCreatedAt }: { messageCreatedAt: number }) =>
-    set((state) => ({
-      messages: state.messages.filter((m) => m.createdAt <= messageCreatedAt),
-    })),
+  addReactionsToMessage: ({ messageCreatedAt, reactions }) =>
+    set((state) => {
+      const updatedMessages = state.messages.map((msg) => {
+        if (msg.createdAt === messageCreatedAt) {
+          return {
+            ...msg,
+            reactions: [...(msg.reactions || []), ...reactions],
+          };
+        }
+        return msg;
+      });
+
+      const updatedLogs = state.messageLogs.map((msg) => {
+        if (msg.createdAt === messageCreatedAt) {
+          return {
+            ...msg,
+            reactions: [...(msg.reactions || []), ...reactions],
+          };
+        }
+        return msg;
+      });
+
+      return {
+        messages: updatedMessages,
+        messageLogs: updatedLogs,
+      };
+    }),
   setActiveAgent: (agent) => set({ activeAgent: agent }),
   setIsLoading: (isLoading) => set({ isLoading }),
   setPhase: (phase) => set({ phase }),
+  getMessageLogs: () => get().messageLogs,
 }));
 
 export default useChatStore;

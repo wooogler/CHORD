@@ -21,7 +21,7 @@ export default function ChatContainer({
   articleTalk,
 }: {
   condition: "prompt" | "chord";
-  articleTalk?: string
+  articleTalk?: string;
 }) {
   const messages = useChatStore((state) => state.messages);
   const activeAgent = useChatStore((state) => state.activeAgent);
@@ -31,7 +31,7 @@ export default function ChatContainer({
     addUserMessage,
     addAssistantMessage,
     changeLastMessageMove,
-    addReactionToMessage,
+    addReactionsToMessage,
     setActiveAgent,
   } = useChatStore();
   const [editedHtml, setEditedHtml] = useState("");
@@ -150,10 +150,20 @@ export default function ChatContainer({
       const { agentName, personality } = agentProfile;
       let task = agentProfile.task;
 
-      if (agentName === "Community Liason" && (articleTalk === null || articleTalk === undefined || articleTalk === "")) {
+      if (
+        agentName === "Community Liason" &&
+        (articleTalk === null ||
+          articleTalk === undefined ||
+          articleTalk === "")
+      ) {
         return;
-      } else if (agentName === "Community Liason" && articleTalk !== null && articleTalk !== undefined && articleTalk !== "") {
-        task = task + articleTalk
+      } else if (
+        agentName === "Community Liason" &&
+        articleTalk !== null &&
+        articleTalk !== undefined &&
+        articleTalk !== ""
+      ) {
+        task = task + articleTalk;
       }
 
       try {
@@ -240,17 +250,23 @@ export default function ChatContainer({
         },
         []
       );
-      console.log(
-        "latestMessagesWithActiveAgent",
-        latestMessagesWithActiveAgent
-      );
 
-      let task = agentProfile?.task || ""
+      let task = agentProfile?.task || "";
 
-      if (agentProfile?.agentName === "Community Liason" && (articleTalk === null || articleTalk === undefined || articleTalk === "")) {
+      if (
+        agentProfile?.agentName === "Community Liason" &&
+        (articleTalk === null ||
+          articleTalk === undefined ||
+          articleTalk === "")
+      ) {
         return;
-      } else if (agentProfile?.agentName === "Community Liason" && articleTalk !== null && articleTalk !== undefined && articleTalk !== "") {
-        task = task + articleTalk
+      } else if (
+        agentProfile?.agentName === "Community Liason" &&
+        articleTalk !== null &&
+        articleTalk !== undefined &&
+        articleTalk !== ""
+      ) {
+        task = task + articleTalk;
       }
 
       const response = await getFeedbackFromAgent({
@@ -333,11 +349,17 @@ export default function ChatContainer({
     originalAgent: string
   ) => {
     const agents = agentProfiles;
+    const reactions: { agentName: string; emoji: string }[] = [];
 
     const agentPromises = agents.map(async (agentProfile) => {
       const { agentName, task, personality } = agentProfile;
 
-      if (agentProfile?.agentName === "Community Liason" && (articleTalk === null || articleTalk === undefined || articleTalk === "")) {
+      if (
+        agentProfile?.agentName === "Community Liason" &&
+        (articleTalk === null ||
+          articleTalk === undefined ||
+          articleTalk === "")
+      ) {
         return;
       }
 
@@ -350,10 +372,7 @@ export default function ChatContainer({
             message
           );
 
-          console.log(agentResponse);
-
-          addReactionToMessage({
-            messageCreatedAt,
+          reactions.push({
             agentName,
             emoji: agentResponse ?? "X",
           });
@@ -365,6 +384,15 @@ export default function ChatContainer({
 
     // 모든 응답이 완료될 때까지 기다림
     await Promise.all(agentPromises);
+
+    // 모든 반응을 한 번에 추가
+    if (reactions.length > 0) {
+      addReactionsToMessage({
+        messageCreatedAt,
+        reactions,
+      });
+    }
+
     setIsLoading(false);
   };
 

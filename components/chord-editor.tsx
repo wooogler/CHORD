@@ -17,12 +17,12 @@ export default function ChordEditor({
   articleTalk: string;
 }) {
   const { setContentHtml } = useEditorStore();
-  const { setMessages } = useChatStore();
+  const { emptyChatStore } = useChatStore();
   const isLocked = useEditorStore((state) => state.isLocked);
 
   useEffect(() => {
-    setContentHtml(articleHtml);
-    setMessages([]);
+    setContentHtml(articleHtml, "LOAD_ARTICLE");
+    emptyChatStore();
   }, [articleHtml]);
 
   useEffect(() => {

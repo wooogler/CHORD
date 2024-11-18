@@ -22,13 +22,19 @@ const WikiViewer: React.FC<WikiViewerProps> = ({ articleTitle }) => {
   const { setContentHtml, setSelectedHtml } = useEditorStore();
   const contentHtml = useEditorStore((state) => state.contentHtml);
   const isLocked = useEditorStore((state) => state.isLocked);
-  const isEditable = useEditorStore((state) => state.isEditable);
 
   const contentEditableRef = useRef<string>(modifyWikiHtml(contentHtml));
 
   const handleLinkClick = useCallback(
     (event: React.MouseEvent<HTMLDivElement>) => {
-      if (isLocked || isEditable) return;
+      const isInEditableContent = (event.target as HTMLElement).closest(
+        '[contenteditable="true"]'
+      );
+
+      if (isInEditableContent) {
+        return;
+      }
+
       if (event.target instanceof HTMLAnchorElement) {
         event.preventDefault();
         const href = event.target.getAttribute("href");
@@ -45,7 +51,7 @@ const WikiViewer: React.FC<WikiViewerProps> = ({ articleTitle }) => {
         }
       }
     },
-    [isEditable, isLocked]
+    []
   );
 
   const handleParagraphSelection = (e: React.MouseEvent<HTMLElement>) => {
@@ -86,7 +92,8 @@ const WikiViewer: React.FC<WikiViewerProps> = ({ articleTitle }) => {
       paragraph.setAttribute("contenteditable", "true");
 
       setContentHtml(
-        document.getElementById("prompt-editor-content")?.innerHTML || ""
+        document.getElementById("prompt-editor-content")?.innerHTML || "",
+        "SELECT_PARAGRAPH"
       );
       setSelectedHtml(highlightSpan.innerHTML || "");
     }
@@ -117,6 +124,17 @@ const WikiViewer: React.FC<WikiViewerProps> = ({ articleTitle }) => {
     }
   };
 
+  const handleBlur = () => {
+    const editor = document.getElementById("prompt-editor-content");
+    if (editor) {
+      const newContentHtml = editor.innerHTML;
+      const currentContentHtml = contentHtml;
+      if (newContentHtml !== currentContentHtml) {
+        setContentHtml(newContentHtml, "EDIT_PARAGRAPH");
+      }
+    }
+  };
+
   return (
     <div
       className="overflow-auto"
@@ -134,6 +152,7 @@ const WikiViewer: React.FC<WikiViewerProps> = ({ articleTitle }) => {
         html={modifyWikiHtml(contentHtml)}
         disabled={true}
         onChange={handleContentChange}
+        onBlur={handleBlur}
       />
     </div>
   );

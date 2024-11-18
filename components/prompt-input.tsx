@@ -20,28 +20,6 @@ export default function PromptInput({
   const isLoading = useChatStore((state) => state.isLoading);
   const phase = useChatStore((state) => state.phase);
 
-  const handleExportMessages = () => {
-    const outputMessages = messages.map((message) => {
-      return {
-        role: message.role,
-        content: message.content,
-        diffHtml:
-          htmldiff(
-            message.originalContentHtml || "",
-            message.editedContentHtml || "",
-            null
-          ) || undefined,
-        applyStatus: message.applyStatus,
-      };
-    });
-    const json = JSON.stringify(outputMessages, null, 2);
-    const blob = new Blob([json], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "messages-prompt.json";
-    a.click();
-  };
   return (
     <div className="flex flex-col p-4">
       <textarea
@@ -62,12 +40,6 @@ export default function PromptInput({
         disabled={isLoading || !isTextSelected || phase === "editing"}
       />
       <div className="flex items-center space-x-2">
-        <button
-          onClick={handleExportMessages}
-          className="bg-gray-500 text-white px-4 py-2 rounded h-10 w-10 flex items-center justify-center"
-        >
-          <FileDownloadIcon />
-        </button>
         <button
           onClick={handleSubmitPrompt}
           className="bg-blue-500 text-white px-4 py-2 rounded disabled:bg-gray-300 flex items-center justify-center flex-1 h-10"
