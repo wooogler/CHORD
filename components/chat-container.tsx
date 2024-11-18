@@ -18,8 +18,10 @@ import useChatStore, { Message, MessageRole } from "@/lib/store/chatStore";
 
 export default function ChatContainer({
   condition,
+  articleTalk,
 }: {
   condition: "prompt" | "chord";
+  articleTalk?: string
 }) {
   const messages = useChatStore((state) => state.messages);
   const activeAgent = useChatStore((state) => state.activeAgent);
@@ -145,7 +147,13 @@ export default function ChatContainer({
     const agents = agentProfiles;
 
     const agentPromises = agents.map(async (agentProfile) => {
-      const { agentName, task, personality } = agentProfile;
+      let { agentName, task, personality } = agentProfile;
+
+      if (agentName === "Community Liason" && (articleTalk === null || articleTalk === undefined || articleTalk === "")) {
+        return;
+      } else if (agentName === "Community Liason" && articleTalk !== null && articleTalk !== undefined && articleTalk !== "") {
+        task = task + articleTalk
+      }
 
       try {
         const agentResponse = await getFeedbackFromAgent({
@@ -236,9 +244,17 @@ export default function ChatContainer({
         latestMessagesWithActiveAgent
       );
 
+      let task = agentProfile?.task || ""
+
+      if (agentProfile?.agentName === "Community Liason" && (articleTalk === null || articleTalk === undefined || articleTalk === "")) {
+        return;
+      } else if (agentProfile?.agentName === "Community Liason" && articleTalk !== null && articleTalk !== undefined && articleTalk !== "") {
+        task = task + articleTalk
+      }
+
       const response = await getFeedbackFromAgent({
         editedHtml: cleanedEditedHtml,
-        task: agentProfile?.task || "",
+        task: task,
         personality: agentProfile?.personality || "",
         chatHistory: latestMessagesWithActiveAgent,
         isMultiAgentChat: false,
@@ -319,6 +335,10 @@ export default function ChatContainer({
 
     const agentPromises = agents.map(async (agentProfile) => {
       const { agentName, task, personality } = agentProfile;
+
+      if (agentProfile?.agentName === "Community Liason" && (articleTalk === null || articleTalk === undefined || articleTalk === "")) {
+        return;
+      }
 
       if (agentName !== originalAgent) {
         try {

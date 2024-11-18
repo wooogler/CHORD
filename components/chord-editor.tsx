@@ -10,9 +10,11 @@ import useChatStore from "@/lib/store/chatStore";
 export default function ChordEditor({
   articleHtml,
   articleTitle,
+  articleTalk,
 }: {
   articleHtml: string;
   articleTitle: string;
+  articleTalk: string;
 }) {
   const { setContentHtml } = useEditorStore();
   const { setMessages } = useChatStore();
@@ -45,7 +47,7 @@ export default function ChordEditor({
       <div className="flex flex-col h-full min-h-0 w-[500px] flex-shrink-0">
         <EditModeSwitch />
 
-        <ChatContainer condition="chord" />
+        <ChatContainer condition="chord" articleTalk={articleTalk} />
       </div>
     </div>
   );

@@ -151,7 +151,7 @@ export default function MessageBubble({
             direction="row"
             spacing={0.8}
             sx={{
-              width: 24 * 3,
+              width: 24 * (reactions?.length ?? 3),
               height: 24,
               position: "absolute",
               top: "100%",
@@ -215,19 +215,18 @@ export default function MessageBubble({
               )}
               {applyStatus && (
                 <div
-                  className={`text-xs font-bold mt-2 ${
-                    applyStatus === "applied"
-                      ? "text-blue-800"
-                      : applyStatus === "cancelled"
+                  className={`text-xs font-bold mt-2 ${applyStatus === "applied"
+                    ? "text-blue-800"
+                    : applyStatus === "cancelled"
                       ? "text-red-800"
                       : "text-gray-800"
-                  }`}
+                    }`}
                 >
                   {applyStatus === "applied"
                     ? "Changes applied"
                     : applyStatus === "cancelled"
-                    ? "Changes cancelled"
-                    : "Changes deferred"}
+                      ? "Changes cancelled"
+                      : "Changes deferred"}
                 </div>
               )}
             </div>

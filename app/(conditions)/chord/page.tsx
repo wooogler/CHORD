@@ -1,5 +1,5 @@
 import ChordEditor from "@/components/chord-editor";
-import { getArticleHtmlByTitle } from "@/lib/wiki";
+import { getArticleHtmlByTitle, getArticleTalkByTitle } from "@/lib/wiki";
 import { Suspense } from "react";
 
 export default async function PromptPage({
@@ -11,14 +11,16 @@ export default async function PromptPage({
 }) {
   const title = searchParams?.title || "";
   let articleHtml = "";
+  let articleTalk = "";
 
   if (title) {
     articleHtml = (await getArticleHtmlByTitle(title)) || "";
+    articleTalk = (await getArticleTalkByTitle(title)) || "";
   }
 
   return (
     <Suspense fallback={<div>Loading...</div>}>
-      <ChordEditor articleHtml={articleHtml} articleTitle={title} />
+      <ChordEditor articleHtml={articleHtml} articleTitle={title} articleTalk={articleTalk} />
     </Suspense>
   );
 }

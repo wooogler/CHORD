@@ -228,11 +228,10 @@ export async function getFeedbackFromAgent({
   const inputMessages: OpenAI.ChatCompletionMessageParam[] = [
     {
       role: "system",
-      content: `You are an AI assistant providing feedback on edited content. ${
-        isMultiAgentChat
+      content: `You are an AI assistant providing feedback on edited content. ${isMultiAgentChat
           ? "Keep your response ultra-concise (max 100 characters)."
           : ""
-      } Match the given personality and be casual like in a group chat.`,
+        } Match the given personality and be casual like in a group chat.`,
     },
     {
       role: "user",
@@ -245,12 +244,11 @@ ${task}
 Personality:
 ${personality}
 
-${
-  chatHistory
-    ? `Chat History:
+${chatHistory
+          ? `Chat History:
 ${formatChatHistory(chatHistory)}`
-    : ""
-}
+          : ""
+        }
 
 Please provide your feedback on the edited content.`,
     },

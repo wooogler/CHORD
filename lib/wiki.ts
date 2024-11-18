@@ -12,3 +12,16 @@ export async function getArticleHtmlByTitle(
     return "";
   }
 }
+
+export async function getArticleTalkByTitle(
+  title: string
+): Promise<string | null> {
+  try {
+    const page = await wikipedia.page("Talk:" + title);
+    const returnField = await page.content();
+    return returnField;
+  } catch (error) {
+    console.error(`제목으로 기사를 가져오는 중 오류 발생: ${error}`);
+    return "";
+  }
+}
