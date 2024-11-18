@@ -1,7 +1,5 @@
 import React from "react";
 import { mapStrToColor } from "@/lib/utils";
-import htmldiff from "node-htmldiff";
-import FileDownloadIcon from "@mui/icons-material/FileDownload";
 import useChatStore from "@/lib/store/chatStore";
 
 interface ChordInputProps {

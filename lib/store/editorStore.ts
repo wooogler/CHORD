@@ -10,7 +10,8 @@ interface LogItem {
   html: string;
   action: string;
   timestamp: number;
-  metadata?: any;
+  editedHtml?: string;
+  originalHtml?: string;
 }
 
 interface EditorState {
@@ -35,7 +36,17 @@ interface EditorState {
     apply: boolean;
   }) => void;
   addToHistory: (html: string) => void;
-  addToLogs: (html: string, action: string, metadata?: any) => void;
+  addToLogs: ({
+    html,
+    action,
+    editedHtml,
+    originalHtml,
+  }: {
+    html: string;
+    action: string;
+    editedHtml?: string;
+    originalHtml?: string;
+  }) => void;
   undo: () => void;
   redo: () => void;
   getContentLogs: () => LogItem[];
@@ -51,7 +62,7 @@ const useEditorStore = create<EditorState>((set, get) => ({
   isLocked: false,
   setContentHtml: (contentHtml: string, action?: string) => {
     get().addToHistory(contentHtml);
-    get().addToLogs(contentHtml, action || "SET_CONTENT");
+    get().addToLogs({ html: contentHtml, action: action || "SET_CONTENT" });
   },
   setSelectedHtml: (selectedHtml: string) => set({ selectedHtml }),
   setIsEditable: (isEditable: boolean) => set({ isEditable }),
@@ -80,7 +91,9 @@ const useEditorStore = create<EditorState>((set, get) => ({
 
         const newHtml = $.html();
         get().addToHistory(newHtml);
-        get().addToLogs(newHtml, apply ? "APPLY_EDIT" : "CANCEL_EDIT", {
+        get().addToLogs({
+          html: newHtml,
+          action: apply ? "APPLY_EDIT" : "CANCEL_EDIT",
           editedHtml,
           originalHtml,
         });
@@ -108,7 +121,17 @@ const useEditorStore = create<EditorState>((set, get) => ({
       };
     });
   },
-  addToLogs: (html: string, action: string, metadata?: any) => {
+  addToLogs: ({
+    html,
+    action,
+    editedHtml,
+    originalHtml,
+  }: {
+    html: string;
+    action: string;
+    editedHtml?: string;
+    originalHtml?: string;
+  }) => {
     set((state) => ({
       contentLogs: [
         ...state.contentLogs,
@@ -116,7 +139,8 @@ const useEditorStore = create<EditorState>((set, get) => ({
           html,
           action,
           timestamp: Date.now(),
-          metadata,
+          editedHtml,
+          originalHtml,
         },
       ],
     }));
@@ -126,7 +150,7 @@ const useEditorStore = create<EditorState>((set, get) => ({
       if (state.currentHistoryIndex > 0) {
         const newIndex = state.currentHistoryIndex - 1;
         const newHtml = state.contentHistory[newIndex].html;
-        get().addToLogs(newHtml, "UNDO");
+        get().addToLogs({ html: newHtml, action: "UNDO" });
         return {
           contentHtml: newHtml,
           currentHistoryIndex: newIndex,
@@ -140,7 +164,7 @@ const useEditorStore = create<EditorState>((set, get) => ({
       if (state.currentHistoryIndex < state.contentHistory.length - 1) {
         const newIndex = state.currentHistoryIndex + 1;
         const newHtml = state.contentHistory[newIndex].html;
-        get().addToLogs(newHtml, "REDO");
+        get().addToLogs({ html: newHtml, action: "REDO" });
         return {
           contentHtml: newHtml,
           currentHistoryIndex: newIndex,

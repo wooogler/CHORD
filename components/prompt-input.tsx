@@ -1,6 +1,4 @@
 import React from "react";
-import FileDownloadIcon from "@mui/icons-material/FileDownload";
-import htmldiff from "node-htmldiff";
 import useChatStore from "@/lib/store/chatStore";
 
 interface PromptInputProps {
@@ -16,7 +14,6 @@ export default function PromptInput({
   handleSubmitPrompt,
   isTextSelected,
 }: PromptInputProps) {
-  const messages = useChatStore((state) => state.messages);
   const isLoading = useChatStore((state) => state.isLoading);
   const phase = useChatStore((state) => state.phase);
 
