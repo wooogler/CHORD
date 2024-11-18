@@ -147,7 +147,8 @@ export default function ChatContainer({
     const agents = agentProfiles;
 
     const agentPromises = agents.map(async (agentProfile) => {
-      let { agentName, task, personality } = agentProfile;
+      const { agentName, personality } = agentProfile;
+      let task = agentProfile.task;
 
       if (agentName === "Community Liason" && (articleTalk === null || articleTalk === undefined || articleTalk === "")) {
         return;
