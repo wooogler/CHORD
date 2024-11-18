@@ -24,7 +24,7 @@ interface ChatState {
   isLoading: boolean;
   phase: "prompt" | "editing" | "conversation";
   setMessages: (messages: Message[]) => void;
-  addUserMessage: (userInput: string) => void;
+  addUserMessage: (userMessage: Message) => void;
   addAssistantMessage: (assistantMessage: Message) => void;
   setActiveAgent: (agent: string | null) => void;
   changeLastMessageMove: (move: "left" | "right") => void;
@@ -59,16 +59,9 @@ const useChatStore = create<ChatState>((set) => ({
   isLoading: false,
   phase: "prompt",
   setMessages: (messages) => set({ messages }),
-  addUserMessage: (userInput) =>
+  addUserMessage: (userMessage) =>
     set((state) => ({
-      messages: [
-        ...state.messages,
-        {
-          role: "user" as MessageRole,
-          content: userInput,
-          createdAt: Date.now(),
-        },
-      ],
+      messages: [...state.messages, userMessage],
     })),
   addAssistantMessage: (assistantMessage) =>
     set((state) => ({

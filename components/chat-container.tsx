@@ -22,18 +22,18 @@ export default function ChatContainer({
   condition: "prompt" | "chord";
 }) {
   const messages = useChatStore((state) => state.messages);
+  const activeAgent = useChatStore((state) => state.activeAgent);
   const {
-    setMessages,
     setIsLoading,
     setPhase,
     addUserMessage,
     addAssistantMessage,
     changeLastMessageMove,
     addReactionToMessage,
+    setActiveAgent,
   } = useChatStore();
   const [editedHtml, setEditedHtml] = useState("");
   const [cleanedEditedHtml, setCleanedEditedHtml] = useState("");
-  const [activeAgent, setActiveAgent] = useState<string | null>(null);
   const [userInput, setUserInput] = useState("");
 
   const { setIsLocked } = useEditorStore();
@@ -57,7 +57,11 @@ export default function ChatContainer({
     setIsLoading(true);
     setIsLocked(true);
 
-    addUserMessage(userInput);
+    addUserMessage({
+      role: "user",
+      content: userInput,
+      createdAt: Date.now(),
+    });
 
     setUserInput("");
 
@@ -94,7 +98,11 @@ export default function ChatContainer({
     setIsLoading(true);
     setIsLocked(true);
 
-    addUserMessage(userInput);
+    addUserMessage({
+      role: "user",
+      content: userInput,
+      createdAt: Date.now(),
+    });
 
     setUserInput("");
 
@@ -173,8 +181,6 @@ export default function ChatContainer({
   const handleSubmitReply = async () => {
     setUserInput("");
 
-    const updatedMessages = [...messages];
-
     const latestMessageFromActiveAgent = messages.findLast(
       (message) => message.agentName === activeAgent
     );
@@ -187,7 +193,7 @@ export default function ChatContainer({
         activeAgent: activeAgent,
         ...latestMessageFromActiveAgent,
       };
-      updatedMessages.push(newAgentMessage);
+      addAssistantMessage(newAgentMessage);
     }
 
     const userMessage: Message = {
@@ -196,9 +202,7 @@ export default function ChatContainer({
       activeAgent: activeAgent,
       createdAt: Date.now(),
     };
-    updatedMessages.push(userMessage);
-
-    setMessages(updatedMessages);
+    addUserMessage(userMessage);
 
     setIsLoading(true);
 
@@ -206,7 +210,7 @@ export default function ChatContainer({
       (agent) => agent.agentName === activeAgent
     );
     try {
-      const latestMessagesWithActiveAgent = updatedMessages.reduceRight(
+      const latestMessagesWithActiveAgent = messages.reduceRight(
         (acc: Message[], curr) => {
           if (acc.length === 0 && curr.activeAgent === activeAgent) {
             return [curr];
@@ -220,6 +224,10 @@ export default function ChatContainer({
           return [];
         },
         []
+      );
+      console.log(
+        "latestMessagesWithActiveAgent",
+        latestMessagesWithActiveAgent
       );
 
       const response = await getFeedbackFromAgent({
