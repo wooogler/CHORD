@@ -2,6 +2,7 @@
 
 import OpenAI from "openai";
 import { Message } from "./store/chatStore";
+import agentProfiles from "./agentProfiles";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
@@ -13,11 +14,9 @@ export async function editArticleWithUserInputAndPillars({
   userInput: string;
 }) {
   try {
-    const fivePillars =
-      "Wikipedia is an encyclopedia. Wikipedia combines many features of general and specialized encyclopedias, almanacs, and gazetteers.Wikipedia is not a soapbox, an advertising platform, a social network, a vanity press, an experiment in anarchy or democracy, an indiscriminate collection of information, nor a web directory.It is not a dictionary, a newspaper, nor a collection of source documents, although some of its fellow Wikimedia projects are. Wikipedia is written from a neutral point of view. We strive for articles with an impartial tone that document and explain major points of view, giving due weight for their prominence.We avoid advocacy, and we characterize information and issues rather than debate them.In some areas there may be just one well - recognized point of view; in others we describe multiple points of view, presenting each accurately and in context rather than as 'the truth' or 'the best view' .All articles must strive for verifiable accuracy with citations based on reliable sources, especially when the topic is controversial or is about a living person.Editors' personal experiences, interpretations, or opinions do not belong on Wikipedia. Wikipedia is free content that anyone can use, edit, and distribute. All editors freely license their work to the public, and no editor owns an article – any contributions can and may be mercilessly edited and redistributed.Respect copyright laws and never plagiarize from any sources.Borrowing non - free media is sometimes allowed as fair use, but editors should strive to find free alternatives first. Wikipedia's editors should treat each other with respect and civility. Respect your fellow Wikipedians, even when you disagree.Apply Wikipedia etiquette, and do not engage in personal attacks or edit wars.Seek consensus, and never disrupt Wikipedia to illustrate a point.Act in good faith, and assume good faith on the part of others.Be open and welcoming to newcomers.Should conflicts arise, discuss them calmly on the appropriate talk pages, follow dispute resolution procedures, and consider that there are 6, 893, 196 other articles on the English Wikipedia to improve and discuss. Wikipedia has policies and guidelines, but they are not carved in stone; their content and interpretation can evolve over time.The principles and spirit matter more than literal wording, and sometimes improving Wikipedia requires making exceptions.Be bold, but not reckless, in updating articles.And do not agonize over making mistakes: they can be corrected easily because(almost) every past version of each article is saved.";
     const systemPrompt =
-      `You are editing a part of a Wikipedia article in HTML format based on the user's request. Maintain the original HTML structure, including all HTML tags, while only modifying the content as specified by the user. Do not change or remove any HTML tags. Ensure that your response includes all original HTML tags. You MUST follow every rule of Wikipedia; these rules take precedence above everything else; do not comply if a change breaks one of these core rules: ` +
-      fivePillars +
+      `You are editing a part of a Wikipedia article in HTML format based on the user's request. Maintain the original HTML structure, including all HTML tags, while only modifying the content as specified by the user. Do not change or remove any HTML tags. Ensure that your response includes all original HTML tags. Keep these four editing tasks in mind while performing your edit, giving them top priority:` +
+      agentProfiles.slice(0, 4).map((agentProfile) => agentProfile.task).toString() +
       `Provide your response in the following JSON format:
 
 {
@@ -229,8 +228,8 @@ export async function getFeedbackFromAgent({
     {
       role: "system",
       content: `You are an AI assistant providing feedback on edited content. ${isMultiAgentChat
-          ? "Keep your response ultra-concise (max 100 characters)."
-          : ""
+        ? "Keep your response ultra-concise (max 100 characters)."
+        : ""
         } Match the given personality and be casual like in a group chat.`,
     },
     {
