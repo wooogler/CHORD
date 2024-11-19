@@ -7,7 +7,7 @@ interface HistoryItem {
 }
 
 interface LogItem {
-  html: string;
+  textContent: string;
   action: string;
   timestamp: number;
   editedHtml?: string;
@@ -27,6 +27,7 @@ interface EditorState {
   setSelectedHtml: (selectedHtml: string | null) => void;
   setIsEditable: (isEditable: boolean) => void;
   setIsLocked: (isLocked: boolean) => void;
+  emptyContentLogs: () => void;
   updateHighlightedContentHtml: ({
     editedHtml,
     originalHtml,
@@ -178,18 +179,24 @@ const useEditorStore = create<EditorState>((set, get) => ({
     editedHtml?: string;
     originalHtml?: string;
   }) => {
-    set((state) => ({
-      contentLogs: [
-        ...state.contentLogs,
-        {
-          html,
-          action,
-          timestamp: Date.now(),
-          editedHtml,
-          originalHtml,
-        },
-      ],
-    }));
+    set((state) => {
+      const $ = cheerio.load(html);
+      return {
+        contentLogs: [
+          ...state.contentLogs,
+          {
+            textContent: $("body p")
+              .map((_, elem) => $(elem).text().trim())
+              .get()
+              .join(" "),
+            action,
+            timestamp: Date.now(),
+            editedHtml,
+            originalHtml,
+          },
+        ],
+      };
+    });
   },
   undo: () => {
     set((state) => {
@@ -221,6 +228,9 @@ const useEditorStore = create<EditorState>((set, get) => ({
   },
   getContentLogs: () => {
     return get().contentLogs;
+  },
+  emptyContentLogs: () => {
+    set({ contentLogs: [] });
   },
 }));
 

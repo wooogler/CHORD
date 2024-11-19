@@ -14,12 +14,13 @@ export default function PromptEditor({
   articleHtml: string;
   articleTitle: string;
 }) {
-  const { setContentHtml } = useEditorStore();
+  const { setContentHtml, emptyContentLogs } = useEditorStore();
   const { emptyChatStore } = useChatStore();
   const isLocked = useEditorStore((state) => state.isLocked);
 
   useEffect(() => {
     setContentHtml(articleHtml, "LOAD_ARTICLE");
+    emptyContentLogs();
     emptyChatStore();
   }, [articleHtml]);
 
