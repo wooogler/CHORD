@@ -3,6 +3,7 @@
 import OpenAI from "openai";
 import { Message } from "./store/chatStore";
 import agentProfiles from "./agentProfiles";
+import { cleanDiffHtml } from "./utils";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
@@ -15,7 +16,7 @@ export async function editArticleWithUserInputAndPillars({
 }) {
   try {
     const systemPrompt =
-      `You are editing a part of a Wikipedia article in HTML format based on the user's request. Maintain the original HTML structure, including all HTML tags, while only modifying the content as specified by the user. Do not change or remove any HTML tags. Ensure that your response includes all original HTML tags. Keep these four editing tasks in mind while performing your edit, giving them top priority:` +
+      `You are editing a part of a Wikipedia article in HTML format based on the user's request. Maintain the original HTML structure, including all HTML tags, while only modifying the content as specified by the user. Do not change or remove any HTML tags besides links when relevant. Ensure that your response includes all original HTML tags. Keep these four editing tasks in mind while performing your edit, giving them top priority:` +
       agentProfiles
         .slice(0, 4)
         .map((agentProfile) => agentProfile.task)
@@ -73,7 +74,7 @@ export async function editArticleWithUserInputOnly({
   console.log("articleHtml", articleHtml);
   console.log("userInput", userInput);
   try {
-    const systemPrompt = `You are editing a part of a Wikipedia article in HTML format based on the user's request. Maintain the original HTML structure, including all HTML tags, while only modifying the content as specified by the user. Do not change or remove any HTML tags. Ensure that your response includes all original HTML tags. Provide your response in the following JSON format:
+    const systemPrompt = `You are editing a part of a Wikipedia article in HTML format based on the user's request. Maintain the original HTML structure, including all HTML tags, while only modifying the content as specified by the user. Do not change or remove any HTML tags besides links when relevant. Ensure that your response includes all original HTML tags. Provide your response in the following JSON format:
 
 {
   "feedback": "{Your natural language feedback about the edited parts}",
@@ -214,32 +215,30 @@ export async function editArticleAsPillar({
     });
 }
 
-export async function getFeedbackFromAgent({
-  editedHtml,
-  task,
-  personality,
-  chatHistory,
-  isMultiAgentChat = false,
-}: {
-  editedHtml: string;
-  task: string;
-  personality: string;
-  chatHistory?: Message[];
-  isMultiAgentChat?: boolean;
-}) {
+export async function getFeedbackFromAgent(
+  prevHtml: string,
+  postHtml: string,
+  task: string,
+  personality: string,
+  chatHistory?: Message[],
+  isMultiAgentChat?: boolean,
+) {
   const inputMessages: OpenAI.ChatCompletionMessageParam[] = [
     {
       role: "system",
-      content: `You are an AI assistant providing feedback on edited content. ${
-        isMultiAgentChat
-          ? "Keep your response ultra-concise (max 100 characters)."
-          : ""
-      } Match the given personality and be casual like in a group chat.`,
+      content: `You are an AI assistant providing feedback on edited content. Today's date is ${new Date().toISOString()} ${isMultiAgentChat
+        ? "Keep your response ultra-concise (max 200 characters)."
+        : "Keep your response consise (max 700 characters)"
+        } Match the given personality, but always perform your task first, and don't let become a caricature of yourself. Your personality is a small influence upon your response. Be casual like in a group chat.`,
     },
     {
       role: "user",
-      content: `Edited Content:
-${editedHtml}
+      content: `
+Existing HTML:
+${cleanDiffHtml(prevHtml)}
+
+The HTML after the user's edit:
+${cleanDiffHtml(postHtml)}
 
 Task:
 ${task}
@@ -247,12 +246,11 @@ ${task}
 Personality:
 ${personality}
 
-${
-  chatHistory
-    ? `Chat History:
+${chatHistory
+          ? `Chat History:
 ${formatChatHistory(chatHistory)}`
-    : ""
-}
+          : ""
+        }
 
 Please provide your feedback on the edited content.`,
     },
@@ -274,7 +272,8 @@ Please provide your feedback on the edited content.`,
 }
 
 export async function getReactionFromAgent(
-  editedHtml: string,
+  prevHtml: string,
+  postHtml: string,
   task: string,
   personality: string,
   message: string
@@ -286,8 +285,12 @@ export async function getReactionFromAgent(
     },
     {
       role: "system",
-      content: `Edited Content:
-${editedHtml}
+      content: `
+Existing HTML:
+${cleanDiffHtml(prevHtml)}
+
+The HTML after the user's edit:
+${cleanDiffHtml(postHtml)}
 
 Task:
 ${task}
@@ -329,7 +332,7 @@ export async function editArticleWithConversation({
   conversation: Message[];
 }) {
   try {
-    const systemPrompt = `You are editing a part of a Wikipedia article in HTML format based on the conversation between a user and an agent. Consider ONLY the user's messages from the conversation to make appropriate edits - ignore the agent's responses. Maintain the original HTML structure, including all HTML tags, while only modifying the content based on the user's requests. Do not change or remove any HTML tags. Ensure that your response includes all original HTML tags. Provide your response in the following JSON format:
+    const systemPrompt = `You are editing a part of a Wikipedia article in HTML format based on the conversation between a user and an agent. Consider ONLY the user's messages from the conversation to make appropriate edits - ignore the agent's responses. Maintain the original HTML structure, including all HTML tags, while only modifying the content based on the user's requests. Do not change or remove any HTML tags besides links when relevant. Ensure that your response includes all original HTML tags. Provide your response in the following JSON format:
 
 {
   "feedback": "{Your natural language feedback explaining the changes made based on the user's requests}",
@@ -415,7 +418,7 @@ export async function editArticleWithContext({
   try {
     const systemPrompt = `You are editing a part of a Wikipedia article in HTML format based on the user's request. You will be provided with both the target HTML to edit and its surrounding context. Use this context to make more informed edits while maintaining consistency with the surrounding content.
 
-Maintain the original HTML structure, including all HTML tags, while only modifying the content as specified by the user. Do not change or remove any HTML tags. Your response should include only the edited target section, not the surrounding context.
+Maintain the original HTML structure, including all HTML tags, while only modifying the content as specified by the user. Do not change or remove any HTML tags besides links when relevant. Your response should include only the edited target section, not the surrounding context.
 
 Provide your response in the following JSON format:
 

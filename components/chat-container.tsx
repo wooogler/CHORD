@@ -36,7 +36,7 @@ export default function ChatContainer({
     setActiveAgent,
   } = useChatStore();
   const [editedHtml, setEditedHtml] = useState("");
-  const [cleanedEditedHtml, setCleanedEditedHtml] = useState("");
+  const setCleanedEditedHtml = useState("")[1];
   const [userInput, setUserInput] = useState("");
 
   const { setIsLocked } = useEditorStore();
@@ -142,7 +142,7 @@ export default function ChatContainer({
 
       setEditedHtml(editingResponse.editedHtml);
 
-      getFeedbackFromAgents(cleanedEditedHtml);
+      getFeedbackFromAgents(selectedHtml || "", editingResponse.editedHtml || "");
     } catch (error) {
       console.error(error);
     } finally {
@@ -150,7 +150,7 @@ export default function ChatContainer({
     }
   };
 
-  const getFeedbackFromAgents = async (editedHtml: string) => {
+  const getFeedbackFromAgents = async (prevHtml: string, postHtml: string) => {
     const agents = agentProfiles;
 
     const agentPromises = agents.map(async (agentProfile) => {
@@ -174,12 +174,14 @@ export default function ChatContainer({
       }
 
       try {
-        const agentResponse = await getFeedbackFromAgent({
-          editedHtml,
+        const agentResponse = await getFeedbackFromAgent(
+          prevHtml,
+          postHtml,
           task,
           personality,
-          isMultiAgentChat: true,
-        });
+          undefined,
+          true,
+        );
 
         const agentMessage: Message = {
           role: "agent",
@@ -190,7 +192,8 @@ export default function ChatContainer({
 
         addAssistantMessage(agentMessage);
         getReactionsToMessage(
-          editedHtml,
+          prevHtml,
+          postHtml,
           agentResponse ?? "",
           agentMessage.createdAt,
           agentName
@@ -276,13 +279,14 @@ export default function ChatContainer({
         task = task + articleTalk;
       }
 
-      const response = await getFeedbackFromAgent({
-        editedHtml: cleanedEditedHtml,
-        task: task,
-        personality: agentProfile?.personality || "",
-        chatHistory: latestMessagesWithActiveAgent,
-        isMultiAgentChat: false,
-      });
+      const response = await getFeedbackFromAgent(
+        selectedHtml || "",
+        editedHtml,
+        task,
+        agentProfile?.personality || "",
+        latestMessagesWithActiveAgent,
+        false,
+      );
 
       const agentMessage: Message = {
         role: "agent" as MessageRole,
@@ -346,11 +350,12 @@ export default function ChatContainer({
   const handleAskAgain = () => {
     changeLastMessageMove("left");
     setPhase("editing");
-    getFeedbackFromAgents(cleanedEditedHtml);
+    getFeedbackFromAgents(selectedHtml || "", editedHtml);
   };
 
   const getReactionsToMessage = async (
-    editedHtml: string,
+    prevHtml: string,
+    postHtml: string,
     message: string,
     messageCreatedAt: number,
     originalAgent: string
@@ -373,7 +378,8 @@ export default function ChatContainer({
       if (agentName !== originalAgent) {
         try {
           const agentResponse = await getReactionFromAgent(
-            editedHtml,
+            prevHtml,
+            postHtml,
             task,
             personality,
             message
