@@ -18,7 +18,7 @@ export default async function BasePage({
   let articleHtml = "";
 
   if (title) {
-    articleHtml = (await getArticleHtmlByTitle(title)) || "";
+    articleHtml = (await getArticleHtmlByTitle({ title })) || "";
   }
 
   return (

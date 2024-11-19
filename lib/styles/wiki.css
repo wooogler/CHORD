@@ -2802,7 +2802,7 @@ figure[typeof~="mw:File/Thumb"] > figcaption:empty {
   }
   .mw-heading1,
   h1 {
-    font-size: 188%;
+    /* font-size: 188%; */
     font-weight: normal;
   }
   .mw-heading2,

@@ -9,6 +9,7 @@ export default async function PromptPage({
 }: {
   searchParams?: {
     title?: string;
+    oldid?: string;
     menu?: string;
   };
 }) {
@@ -18,7 +19,11 @@ export default async function PromptPage({
   let articleTalk = "";
 
   if (title) {
-    articleHtml = (await getArticleHtmlByTitle(title)) || "";
+    articleHtml =
+      (await getArticleHtmlByTitle({
+        title,
+        oldid: searchParams?.oldid,
+      })) || "";
     articleTalk = (await getArticleTalkByTitle(title)) || "";
   }
 

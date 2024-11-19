@@ -1,14 +1,59 @@
 import wikipedia from "wikipedia";
+import * as cheerio from "cheerio";
 
-export async function getArticleHtmlByTitle(
-  title: string
-): Promise<string | null> {
+export async function getArticleHtmlByTitle({
+  title,
+  oldid,
+}: {
+  title: string;
+  oldid?: string;
+}): Promise<string | null> {
   try {
-    const page = await wikipedia.page(title);
-    const html = await page.html();
-    return html;
+    const params = new URLSearchParams({
+      action: "parse",
+      format: "json",
+      prop: "text",
+      formatversion: "2",
+    });
+
+    if (oldid) {
+      params.set("oldid", oldid);
+    } else {
+      params.set("page", title);
+    }
+
+    const response = await fetch(
+      `https://en.wikipedia.org/w/api.php?${params}`,
+      {
+        headers: {
+          Accept: "application/json",
+        },
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    const $ = cheerio.load(data.parse.text as string);
+    $("style, meta").remove();
+    $("*")
+      .contents()
+      .filter(function () {
+        return this.nodeType === 8;
+      })
+      .remove();
+    $("h2").each((_, element) => {
+      if ($(element).text().includes("References")) {
+        $(element).parent().nextAll().remove();
+        $(element).parent().remove();
+      }
+    });
+
+    return $.html();
   } catch (error) {
-    console.error(`제목으로 기사를 가져오는 중 오류 발생: ${error}`);
+    console.error(`Error getting article html: ${error}`);
     return "";
   }
 }
@@ -21,7 +66,7 @@ export async function getArticleTalkByTitle(
     const returnField = await page.content();
     return returnField;
   } catch (error) {
-    console.error(`제목으로 기사를 가져오는 중 오류 발생: ${error}`);
+    console.error(`Error getting article talk: ${error}`);
     return "";
   }
 }
