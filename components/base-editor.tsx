@@ -26,7 +26,7 @@ export default function BaseEditor({
         contentHtml={contentHtml}
         isEditable={isEditable}
       />
-      <div className="flex flex-col h-full min-h-0 w-[500px] flex-shrink-0">
+      <div className="flex flex-col h-full min-h-0 w-[500px] flex-shrink-0 border-l">
         <EditModeSwitch isBaseEditor={true} />
       </div>
     </div>

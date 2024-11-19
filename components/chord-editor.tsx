@@ -45,7 +45,7 @@ export default function ChordEditor({
   return (
     <div className="flex h-full">
       <WikiViewer articleTitle={articleTitle} />
-      <div className="flex flex-col h-full min-h-0 w-[500px] flex-shrink-0">
+      <div className="flex flex-col h-full min-h-0 w-[500px] flex-shrink-0 border-l">
         <EditModeSwitch />
 
         <ChatContainer condition="chord" articleTalk={articleTalk} />

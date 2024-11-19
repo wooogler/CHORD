@@ -43,7 +43,7 @@ export default function PromptEditor({
   return (
     <div className="flex h-full">
       <WikiViewer articleTitle={articleTitle} />
-      <div className="flex flex-col h-full w-[500px] flex-shrink-0">
+      <div className="flex flex-col h-full w-[500px] flex-shrink-0 border-l">
         <EditModeSwitch />
         <ChatContainer condition="prompt" />
       </div>

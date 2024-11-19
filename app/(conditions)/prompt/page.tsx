@@ -41,8 +41,8 @@ export default async function PromptPage({
           </div>
         </main>
       ) : (
-        <main className="p-8 h-screen">
-          <div className="flex h-full overflow-hidden">
+        <main className="p-4 h-screen">
+          <div className="flex p-4 h-full overflow-hidden rounded-lg border">
             <article className="flex-grow overflow-hidden">
               <Suspense fallback={<div>Loading...</div>}>
                 <PromptEditor articleHtml={articleHtml} articleTitle={title} />
