@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  editArticleWithContext,
   editArticleWithConversation,
   editArticleWithUserInputOnly,
   getFeedbackFromAgent,
@@ -41,7 +42,7 @@ export default function ChatContainer({
   const { setIsLocked } = useEditorStore();
 
   const selectedHtml = useEditorStore((state) => state.selectedHtml);
-
+  const surroundingHtml = useEditorStore((state) => state.surroundingHtml);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollToBottom = () => {
     if (messagesEndRef.current) {
@@ -71,15 +72,21 @@ export default function ChatContainer({
       console.log("selectedHtml", selectedHtml);
       console.log("userInput", userInput);
 
-      const response = await editArticleWithUserInputOnly({
-        articleHtml: selectedHtml,
+      // const response = await editArticleWithUserInputOnly({
+      //   articleHtml: selectedHtml || "",
+      //   userInput: userInput,
+      // });
+
+      const response = await editArticleWithContext({
+        articleHtml: selectedHtml || "",
         userInput: userInput,
+        surroundingHtml: surroundingHtml || "",
       });
 
       const assistantMessage: Message = {
         role: "assistant",
         content: response.feedback || "No feedback provided",
-        originalContentHtml: selectedHtml,
+        originalContentHtml: selectedHtml || "",
         editedContentHtml: response.editedHtml,
         createdAt: Date.now(),
       };
@@ -110,7 +117,7 @@ export default function ChatContainer({
 
     try {
       const editingResponse = await editArticleWithUserInputOnly({
-        articleHtml: selectedHtml,
+        articleHtml: selectedHtml || "",
         userInput: userInput,
       });
 
@@ -118,7 +125,7 @@ export default function ChatContainer({
         role: "representative",
         agentName: "The Liason",
         content: editingResponse.feedback,
-        originalContentHtml: selectedHtml,
+        originalContentHtml: selectedHtml || "",
         editedContentHtml: editingResponse.editedHtml,
         move: "left",
         createdAt: Date.now(),
@@ -128,7 +135,7 @@ export default function ChatContainer({
       setPhase("editing");
 
       const cleanedEditedHtml = cleanDiffHtml(
-        htmldiff(selectedHtml, editingResponse.editedHtml)
+        htmldiff(selectedHtml || "", editingResponse.editedHtml || "")
       );
 
       setCleanedEditedHtml(cleanedEditedHtml);
@@ -319,7 +326,7 @@ export default function ChatContainer({
       role: "representative",
       agentName: "The Liason",
       content: editingResponse.feedback,
-      originalContentHtml: selectedHtml,
+      originalContentHtml: selectedHtml || "",
       editedContentHtml: editingResponse.editedHtml,
       move: "right",
       createdAt: Date.now(),
@@ -328,7 +335,7 @@ export default function ChatContainer({
     addAssistantMessage(representativeMessage);
 
     const cleanedEditedHtml = cleanDiffHtml(
-      htmldiff(selectedHtml, editingResponse.editedHtml)
+      htmldiff(selectedHtml || "", editingResponse.editedHtml || "")
     );
 
     setCleanedEditedHtml(cleanedEditedHtml);

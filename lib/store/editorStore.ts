@@ -19,11 +19,12 @@ interface EditorState {
   contentHistory: HistoryItem[];
   contentLogs: LogItem[];
   currentHistoryIndex: number;
-  selectedHtml: string;
+  selectedHtml: string | null;
+  surroundingHtml: string | null;
   isEditable: boolean;
   isLocked: boolean;
   setContentHtml: (contentHtml: string, action?: string) => void;
-  setSelectedHtml: (selectedHtml: string) => void;
+  setSelectedHtml: (selectedHtml: string | null) => void;
   setIsEditable: (isEditable: boolean) => void;
   setIsLocked: (isLocked: boolean) => void;
   updateHighlightedContentHtml: ({
@@ -57,14 +58,59 @@ const useEditorStore = create<EditorState>((set, get) => ({
   contentHistory: [],
   contentLogs: [],
   currentHistoryIndex: -1,
-  selectedHtml: "",
+  selectedHtml: null,
+  surroundingHtml: null,
   isEditable: true,
   isLocked: false,
   setContentHtml: (contentHtml: string, action?: string) => {
     get().addToHistory(contentHtml);
     get().addToLogs({ html: contentHtml, action: action || "SET_CONTENT" });
   },
-  setSelectedHtml: (selectedHtml: string) => set({ selectedHtml }),
+  setSelectedHtml: (selectedHtml: string | null) => {
+    if (!selectedHtml) {
+      set({ selectedHtml: null, surroundingHtml: null });
+      return;
+    }
+
+    const contentHtml = get().contentHtml;
+    const $ = cheerio.load(contentHtml);
+
+    const targetP = $("p.wiki-paragraph")
+      .filter((_, elem) => {
+        const elemHtml = $(elem).html()?.trim() || "";
+        return elemHtml.includes(selectedHtml.trim());
+      })
+      .first();
+
+    console.log("targetP", targetP.prop("outerHTML"));
+
+    if (targetP && targetP.length > 0) {
+      const surroundingElements: string[] = [];
+      const prevTarget = targetP
+        .prevAll("p.wiki-paragraph:not(.empty-paragraph), .mw-heading")
+        .first();
+      if (prevTarget.length) {
+        surroundingElements.push(prevTarget.html() || "");
+      }
+      surroundingElements.push(targetP.html() || "");
+      const nextTarget = targetP
+        .nextAll("p.wiki-paragraph:not(.empty-paragraph), .mw-heading")
+        .first();
+      if (nextTarget.length) {
+        surroundingElements.push(nextTarget.html() || "");
+      }
+
+      const surroundingHtml = surroundingElements.join("");
+
+      console.log("surroundingHtml", surroundingHtml);
+
+      set({
+        selectedHtml,
+        surroundingHtml,
+      });
+      return;
+    }
+  },
   setIsEditable: (isEditable: boolean) => set({ isEditable }),
   setIsLocked: (isLocked: boolean) => set({ isLocked }),
   updateHighlightedContentHtml: ({

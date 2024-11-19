@@ -32,7 +32,7 @@ export function mapStrToColor(str: string) {
 }
 
 export function cleanDiffHtml(htmlString: string) {
-  const $ = cheerio.load(htmlString, null, false);
+  const $ = cheerio.load(htmlString);
 
   $("*").each((_, element) => {
     if ("tagName" in element) {

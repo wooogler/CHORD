@@ -16,7 +16,10 @@ export async function editArticleWithUserInputAndPillars({
   try {
     const systemPrompt =
       `You are editing a part of a Wikipedia article in HTML format based on the user's request. Maintain the original HTML structure, including all HTML tags, while only modifying the content as specified by the user. Do not change or remove any HTML tags. Ensure that your response includes all original HTML tags. Keep these four editing tasks in mind while performing your edit, giving them top priority:` +
-      agentProfiles.slice(0, 4).map((agentProfile) => agentProfile.task).toString() +
+      agentProfiles
+        .slice(0, 4)
+        .map((agentProfile) => agentProfile.task)
+        .toString() +
       `Provide your response in the following JSON format:
 
 {
@@ -227,10 +230,11 @@ export async function getFeedbackFromAgent({
   const inputMessages: OpenAI.ChatCompletionMessageParam[] = [
     {
       role: "system",
-      content: `You are an AI assistant providing feedback on edited content. ${isMultiAgentChat
-        ? "Keep your response ultra-concise (max 100 characters)."
-        : ""
-        } Match the given personality and be casual like in a group chat.`,
+      content: `You are an AI assistant providing feedback on edited content. ${
+        isMultiAgentChat
+          ? "Keep your response ultra-concise (max 100 characters)."
+          : ""
+      } Match the given personality and be casual like in a group chat.`,
     },
     {
       role: "user",
@@ -243,11 +247,12 @@ ${task}
 Personality:
 ${personality}
 
-${chatHistory
-          ? `Chat History:
+${
+  chatHistory
+    ? `Chat History:
 ${formatChatHistory(chatHistory)}`
-          : ""
-        }
+    : ""
+}
 
 Please provide your feedback on the edited content.`,
     },
@@ -392,4 +397,74 @@ ${message.role} - content:
 ${message.content}
 -------------------------------------------`);
   });
+}
+
+export async function editArticleWithContext({
+  articleHtml,
+  surroundingHtml,
+  userInput,
+}: {
+  articleHtml: string;
+  surroundingHtml: string;
+  userInput: string;
+}) {
+  console.log("articleHtml", articleHtml);
+  console.log("surroundingHtml", surroundingHtml);
+  console.log("userInput", userInput);
+
+  try {
+    const systemPrompt = `You are editing a part of a Wikipedia article in HTML format based on the user's request. You will be provided with both the target HTML to edit and its surrounding context. Use this context to make more informed edits while maintaining consistency with the surrounding content.
+
+Maintain the original HTML structure, including all HTML tags, while only modifying the content as specified by the user. Do not change or remove any HTML tags. Your response should include only the edited target section, not the surrounding context.
+
+Provide your response in the following JSON format:
+
+{
+  "feedback": "{Your natural language feedback about the edited parts and how it fits with the surrounding context}",
+  "editedHtml": "{The edited target section in HTML format}"
+}`;
+
+    const inputMessages: OpenAI.ChatCompletionMessageParam[] = [
+      {
+        role: "system",
+        content: systemPrompt,
+      },
+      {
+        role: "user",
+        content: `Context HTML:\n${surroundingHtml}\n\nTarget HTML to Edit:\n${articleHtml}\n\nUser Request: ${userInput}\n\nPlease edit the target content as requested while considering the surrounding context. Make sure to keep all original HTML tags intact. Your response should contain only the edited target section in valid HTML format.`,
+      },
+    ];
+
+    logMessages({
+      functionName: "editArticleWithContext",
+      messages: inputMessages,
+    });
+
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o",
+      temperature: 0,
+      response_format: { type: "json_object" },
+      messages: inputMessages,
+    });
+
+    const assistantResponse = completion.choices[0].message.content;
+
+    let parsedResponse;
+    try {
+      parsedResponse = JSON.parse(assistantResponse || "");
+    } catch (error) {
+      console.error("Error parsing JSON:", error);
+      throw error;
+    }
+
+    console.log("editedHtml", parsedResponse.editedHtml);
+
+    return {
+      feedback: parsedResponse.feedback,
+      editedHtml: parsedResponse.editedHtml,
+    };
+  } catch (error) {
+    console.error("OpenAI API Error:", error);
+    throw error;
+  }
 }

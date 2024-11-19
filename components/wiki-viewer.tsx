@@ -10,6 +10,8 @@ interface WikiViewerProps {
 const modifyWikiHtml = (htmlString: string) => {
   const $ = cheerio.load(htmlString);
   $("sup").remove();
+  $("div.mw-heading2").after('<p class="wiki-paragraph empty-paragraph"></p>');
+  $("div.mw-heading3").after('<p class="wiki-paragraph empty-paragraph"></p>');
   $("p:not(.wiki-paragraph)").after(
     '<p class="wiki-paragraph empty-paragraph"></p>'
   );
@@ -80,12 +82,8 @@ const WikiViewer: React.FC<WikiViewerProps> = ({ articleTitle }) => {
       const highlightSpan = document.createElement("span");
       highlightSpan.className = "highlight-yellow";
 
-      if (!paragraph.textContent?.trim()) {
-        highlightSpan.textContent = " ";
-      } else {
-        while (paragraph.firstChild) {
-          highlightSpan.appendChild(paragraph.firstChild);
-        }
+      while (paragraph.firstChild) {
+        highlightSpan.appendChild(paragraph.firstChild);
       }
 
       paragraph.appendChild(highlightSpan);
@@ -95,7 +93,7 @@ const WikiViewer: React.FC<WikiViewerProps> = ({ articleTitle }) => {
         document.getElementById("prompt-editor-content")?.innerHTML || "",
         "SELECT_PARAGRAPH"
       );
-      setSelectedHtml(highlightSpan.innerHTML || "");
+      setSelectedHtml(highlightSpan.innerHTML || null);
     }
   };
 
@@ -112,23 +110,38 @@ const WikiViewer: React.FC<WikiViewerProps> = ({ articleTitle }) => {
     if (isLocked) return;
 
     contentEditableRef.current = evt.target.value;
-
-    const editor = document.getElementById("prompt-editor-content");
-    if (editor) {
-      const emptyParagraphs = editor.querySelectorAll(".empty-paragraph");
-      emptyParagraphs.forEach((p) => {
-        if (p.textContent?.trim()) {
-          p.classList.remove("empty-paragraph");
-        }
-      });
-    }
   };
 
   const handleBlur = () => {
     const editor = document.getElementById("prompt-editor-content");
     if (editor) {
-      const newContentHtml = editor.innerHTML;
+      let newContentHtml = editor.innerHTML;
       const currentContentHtml = contentHtml;
+
+      // 먼저 empty paragraph 체크 및 수정
+      const tempDiv = document.createElement("div");
+      tempDiv.innerHTML = newContentHtml;
+
+      const wikiParagraphs = tempDiv.querySelectorAll(".wiki-paragraph");
+      wikiParagraphs.forEach((p) => {
+        if (!p.textContent?.trim()) {
+          p.classList.add("empty-paragraph");
+          p.setAttribute("contenteditable", "false");
+          p.innerHTML = "";
+        }
+      });
+
+      const emptyParagraphs = tempDiv.querySelectorAll(".empty-paragraph");
+      emptyParagraphs.forEach((p) => {
+        if (p.textContent?.trim()) {
+          p.classList.remove("empty-paragraph");
+        }
+      });
+
+      // 수정된 HTML 가져오기
+      newContentHtml = tempDiv.innerHTML;
+
+      // 변경사항이 있을 경우에만 store 업데이트
       if (newContentHtml !== currentContentHtml) {
         setContentHtml(newContentHtml, "EDIT_PARAGRAPH");
       }

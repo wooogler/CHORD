@@ -2798,6 +2798,7 @@ figure[typeof~="mw:File/Thumb"] > figcaption:empty {
   .mw-heading5,
   h5 {
     margin-bottom: 0.3em;
+    margin-top: 0.3em;
   }
   .mw-heading1,
   h1 {
@@ -3358,6 +3359,7 @@ figure[typeof~="mw:File/Thumb"] > figcaption:empty {
   .toc {
     display: table;
     padding: 7px;
+    margin-top: 1em;
   }
   .toc h2 {
     display: inline;

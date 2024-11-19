@@ -41,12 +41,22 @@ const EditModeSwitch: React.FC<{ isBaseEditor?: boolean }> = ({
   const handleDownloadLogs = () => {
     const contentLogs = getContentLogs();
     const messageLogs = getMessageLogs();
-    const json = JSON.stringify({ contentLogs, messageLogs }, null, 2);
+    const json = JSON.stringify(
+      {
+        createdAt: Date.now(),
+        numberOfContentLogs: contentLogs.length,
+        numberOfMessageLogs: messageLogs.length,
+        contentLogs,
+        messageLogs,
+      },
+      null,
+      2
+    );
     const blob = new Blob([json], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "content-logs.json";
+    a.download = `logs-${Date.now()}.json`;
     a.click();
   };
 
