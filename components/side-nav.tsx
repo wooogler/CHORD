@@ -45,6 +45,9 @@ export default function SideNav() {
     const params = new URLSearchParams(searchParams);
     if (title) {
       params.set("title", title);
+      if (searchParams.get("menu")) {
+        params.set("menu", searchParams.get("menu")!);
+      }
     } else {
       params.delete("title");
     }

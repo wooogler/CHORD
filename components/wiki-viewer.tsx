@@ -81,6 +81,7 @@ const WikiViewer: React.FC<WikiViewerProps> = ({ articleTitle }) => {
 
       const highlightSpan = document.createElement("span");
       highlightSpan.className = "highlight-yellow";
+      highlightSpan.textContent = " ";
 
       while (paragraph.firstChild) {
         highlightSpan.appendChild(paragraph.firstChild);

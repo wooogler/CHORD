@@ -16,13 +16,14 @@ export default function ChordEditor({
   articleTitle: string;
   articleTalk: string;
 }) {
-  const { setContentHtml } = useEditorStore();
+  const { setContentHtml, emptyContentLogs } = useEditorStore();
   const { emptyChatStore } = useChatStore();
   const isLocked = useEditorStore((state) => state.isLocked);
 
   useEffect(() => {
     setContentHtml(articleHtml, "LOAD_ARTICLE");
     emptyChatStore();
+    emptyContentLogs();
   }, [articleHtml]);
 
   useEffect(() => {
