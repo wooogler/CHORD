@@ -170,7 +170,16 @@ const WikiViewer: React.FC<WikiViewerProps> = ({ articleTitle }) => {
           if (nextP.hasClass("empty-paragraph")) {
             nextP.remove();
           }
-          $(p).remove();
+          const totalEditParagraphs = $("p.edit-paragraph").length;
+
+          if (totalEditParagraphs === 1) {
+            $(p)
+              .removeClass("edit-paragraph empty-paragraph")
+              .addClass("target-paragraph")
+              .text("Write this paragraph");
+          } else {
+            $(p).remove();
+          }
         }
       });
 
@@ -193,26 +202,6 @@ const WikiViewer: React.FC<WikiViewerProps> = ({ articleTitle }) => {
           }
         }
       );
-
-      $("div.mw-heading").each((_, heading) => {
-        const nextHeading = $(heading)
-          .nextUntil("div.mw-heading")
-          .addBack()
-          .last()
-          .next("div.mw-heading");
-        if (nextHeading.length) {
-          const paragraphsBetween = $(heading).nextUntil(
-            nextHeading,
-            "p"
-          ).length;
-          if (paragraphsBetween === 0) {
-            const targetP = $("<p>")
-              .addClass("target-paragraph")
-              .text("Click to start writing");
-            $(heading).after(targetP);
-          }
-        }
-      });
 
       newContentHtml = $.html();
 
