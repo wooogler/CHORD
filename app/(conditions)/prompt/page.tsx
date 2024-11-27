@@ -1,7 +1,7 @@
 import ConditionNav from "@/components/condition-nav";
 import PromptEditor from "@/components/prompt-editor";
 import SideNav from "@/components/side-nav";
-import { getArticleHtmlByTitle } from "@/lib/wiki";
+import { excludeParagraph, getArticleHtmlByTitle } from "@/lib/wiki";
 import { Suspense } from "react";
 
 export default async function PromptPage({
@@ -11,10 +11,12 @@ export default async function PromptPage({
     title?: string;
     oldid?: string;
     menu?: string;
+    p?: string;
   };
 }) {
   const title = searchParams?.title || "";
   const isMenu = searchParams?.menu === "true";
+  const paragraphName = searchParams?.p;
   let articleHtml = "";
 
   if (title) {
@@ -23,6 +25,10 @@ export default async function PromptPage({
         title,
         oldid: searchParams?.oldid,
       })) || "";
+
+    if (paragraphName) {
+      articleHtml = excludeParagraph(articleHtml, paragraphName);
+    }
   }
 
   return (

@@ -185,10 +185,12 @@ const useEditorStore = create<EditorState>((set, get) => ({
         contentLogs: [
           ...state.contentLogs,
           {
-            textContent: $("body p")
+            textContent: $(
+              "p.edit-paragraph.wiki-paragraph:not(.empty-paragraph)"
+            )
               .map((_, elem) => $(elem).text().trim())
               .get()
-              .join(" "),
+              .join("\n"),
             action,
             timestamp: Date.now(),
             editedHtml,

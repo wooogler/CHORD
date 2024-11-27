@@ -10,11 +10,11 @@ interface WikiViewerProps {
 const modifyWikiHtml = (htmlString: string) => {
   const $ = cheerio.load(htmlString);
   $("sup").remove();
-  $("div.mw-heading2").after('<p class="wiki-paragraph empty-paragraph"></p>');
-  $("div.mw-heading3").after('<p class="wiki-paragraph empty-paragraph"></p>');
-  $("p:not(.wiki-paragraph)").after(
-    '<p class="wiki-paragraph empty-paragraph"></p>'
-  );
+  // $("div.mw-heading2").after('<p class="wiki-paragraph empty-paragraph"></p>');
+  // $("div.mw-heading3").after('<p class="wiki-paragraph empty-paragraph"></p>');
+  // $("p:not(.wiki-paragraph)").after(
+  //   '<p class="wiki-paragraph empty-paragraph"></p>'
+  // );
   $("p").addClass("wiki-paragraph");
   $("a").addClass("wiki-link");
   return $.html();
@@ -59,7 +59,15 @@ const WikiViewer: React.FC<WikiViewerProps> = ({ articleTitle }) => {
   const handleParagraphSelection = (e: React.MouseEvent<HTMLElement>) => {
     if (isLocked) return;
     const paragraph = e.target as HTMLElement;
-    if (paragraph.tagName.toLowerCase() === "p") {
+    if (paragraph.classList.contains("target-paragraph")) {
+      paragraph.classList.remove("target-paragraph");
+      paragraph.classList.add(
+        "edit-paragraph",
+        "empty-paragraph",
+        "wiki-paragraph"
+      );
+      paragraph.textContent = "Remove this text and start writing your own";
+    } else if (paragraph.classList.contains("edit-paragraph")) {
       const editor = document.getElementById("prompt-editor-content");
       if (editor) {
         editor.querySelectorAll('p[contenteditable="true"]').forEach((p) => {
@@ -81,7 +89,7 @@ const WikiViewer: React.FC<WikiViewerProps> = ({ articleTitle }) => {
 
       const highlightSpan = document.createElement("span");
       highlightSpan.className = "highlight-yellow";
-      highlightSpan.textContent = " ";
+      highlightSpan.textContent = "";
 
       while (paragraph.firstChild) {
         highlightSpan.appendChild(paragraph.firstChild);
@@ -119,30 +127,95 @@ const WikiViewer: React.FC<WikiViewerProps> = ({ articleTitle }) => {
       let newContentHtml = editor.innerHTML;
       const currentContentHtml = contentHtml;
 
-      // 먼저 empty paragraph 체크 및 수정
-      const tempDiv = document.createElement("div");
-      tempDiv.innerHTML = newContentHtml;
+      const $ = cheerio.load(newContentHtml);
+      const editParagraphs = $("p.edit-paragraph:has(span.highlight-yellow)");
+      editParagraphs.each((i, p) => {
+        const spans = $(p).find("span.highlight-yellow");
+        if (spans.length > 1) {
+          const firstSpan = spans.first();
+          $(p).empty().text($(firstSpan).text());
 
-      const wikiParagraphs = tempDiv.querySelectorAll(".wiki-paragraph");
-      wikiParagraphs.forEach((p) => {
-        if (!p.textContent?.trim()) {
-          p.classList.add("empty-paragraph");
-          p.setAttribute("contenteditable", "false");
-          p.innerHTML = "";
+          const otherSpans = spans.slice(1);
+          otherSpans.each((i, span) => {
+            const contents = $(span).text().split(/\n+/);
+
+            contents.forEach((content, index) => {
+              if (content.trim()) {
+                const newP = $("<p>")
+                  .addClass("wiki-paragraph edit-paragraph")
+                  .text(content);
+                $(p).after(newP);
+              } else if (index < contents.length - 1) {
+                const emptyP = $("<p>").addClass(
+                  "wiki-paragraph edit-paragraph empty-paragraph"
+                );
+                $(p).after(emptyP);
+              }
+            });
+          });
+        } else if (spans.length === 1) {
+          $(p).empty().text($(spans.first()).text());
         }
       });
 
-      const emptyParagraphs = tempDiv.querySelectorAll(".empty-paragraph");
-      emptyParagraphs.forEach((p) => {
-        if (p.textContent?.trim()) {
-          p.classList.remove("empty-paragraph");
+      $("p.empty-paragraph").each((_, p) => {
+        if ($(p).text().trim()) {
+          $(p).removeClass("empty-paragraph");
         }
       });
 
-      // 수정된 HTML 가져오기
-      newContentHtml = tempDiv.innerHTML;
+      $("p.edit-paragraph").each((_, p) => {
+        if (!$(p).text().trim()) {
+          const nextP = $(p).next("p");
+          if (nextP.hasClass("empty-paragraph")) {
+            nextP.remove();
+          }
+          $(p).remove();
+        }
+      });
 
-      // 변경사항이 있을 경우에만 store 업데이트
+      $("div.mw-heading").each((_, heading) => {
+        const nextElement = $(heading).next();
+        if (nextElement.is("p.edit-paragraph.wiki-paragraph")) {
+          const emptyP = $("<p>").addClass(
+            "edit-paragraph empty-paragraph wiki-paragraph"
+          );
+          $(heading).after(emptyP);
+        }
+      });
+
+      $("p.edit-paragraph.wiki-paragraph:not(.empty-paragraph)").each(
+        (_, p) => {
+          const nextP = $(p).next("p");
+          if (!nextP.length || !nextP.hasClass("empty-paragraph")) {
+            const emptyP = $("<p>").addClass("edit-paragraph empty-paragraph");
+            $(p).after(emptyP);
+          }
+        }
+      );
+
+      $("div.mw-heading").each((_, heading) => {
+        const nextHeading = $(heading)
+          .nextUntil("div.mw-heading")
+          .addBack()
+          .last()
+          .next("div.mw-heading");
+        if (nextHeading.length) {
+          const paragraphsBetween = $(heading).nextUntil(
+            nextHeading,
+            "p"
+          ).length;
+          if (paragraphsBetween === 0) {
+            const targetP = $("<p>")
+              .addClass("target-paragraph")
+              .text("Click to start writing");
+            $(heading).after(targetP);
+          }
+        }
+      });
+
+      newContentHtml = $.html();
+
       if (newContentHtml !== currentContentHtml) {
         setContentHtml(newContentHtml, "EDIT_PARAGRAPH");
       }

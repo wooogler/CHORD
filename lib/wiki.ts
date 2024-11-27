@@ -70,3 +70,22 @@ export async function getArticleTalkByTitle(
     return "";
   }
 }
+
+export function excludeParagraph(html: string, paragraphName: string) {
+  const $ = cheerio.load(html);
+  $(`div.mw-heading [id*="${paragraphName}"]`).each((_, element) => {
+    const startElement = $(element).parent();
+    let currentElement = startElement.next();
+
+    while (currentElement.length && !currentElement.hasClass("mw-heading")) {
+      const nextElement = currentElement.next();
+      if (currentElement.is("p")) {
+        currentElement.remove();
+      }
+      currentElement = nextElement;
+    }
+    startElement.after("<p class='target-paragraph'>Write this paragraph</p>");
+  });
+
+  return $.html();
+}

@@ -1,7 +1,11 @@
 import ChordEditor from "@/components/chord-editor";
 import ConditionNav from "@/components/condition-nav";
 import SideNav from "@/components/side-nav";
-import { getArticleHtmlByTitle, getArticleTalkByTitle } from "@/lib/wiki";
+import {
+  excludeParagraph,
+  getArticleHtmlByTitle,
+  getArticleTalkByTitle,
+} from "@/lib/wiki";
 import { Suspense } from "react";
 
 export default async function PromptPage({
@@ -11,10 +15,12 @@ export default async function PromptPage({
     title?: string;
     oldid?: string;
     menu?: string;
+    p?: string;
   };
 }) {
   const title = searchParams?.title || "";
   const isMenu = searchParams?.menu === "true";
+  const paragraphName = searchParams?.p;
   let articleHtml = "";
   let articleTalk = "";
 
@@ -24,6 +30,9 @@ export default async function PromptPage({
         title,
         oldid: searchParams?.oldid,
       })) || "";
+    if (paragraphName) {
+      articleHtml = excludeParagraph(articleHtml, paragraphName);
+    }
     articleTalk = (await getArticleTalkByTitle(title)) || "";
   }
 

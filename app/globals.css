@@ -68,50 +68,75 @@ body {
   display: none;
 }
 
-#prompt-editor-content .highlight-yellow {
+#prompt-editor-content .edit-paragraph .highlight-yellow {
   background-color: yellow;
-  display: inline;
+  display: inline-block;
+  min-height: 1.5em;
   cursor: text;
 }
 
-#prompt-editor-content .highlight-gray {
+#prompt-editor-content .edit-paragraph .highlight-gray {
   background-color: lightgray;
   display: inline;
 }
 
-#prompt-editor-content .highlight-green {
+#prompt-editor-content .edit-paragraph .highlight-green {
   background-color: lightgreen;
   display: inline;
 }
 
-.wiki-paragraph {
+.wiki-paragraph.edit-paragraph {
+  cursor: pointer;
+  border: 1px solid transparent;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  max-width: 100%;
+}
+
+.wiki-paragraph.edit-paragraph.empty-paragraph {
+  cursor: pointer;
+  transition: border-color 0.2s;
+  min-height: 0.5em;
   cursor: pointer;
 }
+
+.wiki-paragraph.edit-paragraph:hover {
+  background-color: rgb(229, 231, 235);
+  border: 1px dashed #ccc;
+}
+
+.target-paragraph {
+  height: 10em;
+  border: 1px dashed #ccc;
+  cursor: pointer;
+  text-align: center;
+  line-height: 10em;
+}
+
+/* 
 
 [contentEditable="true"] .wiki-paragraph .highlight-yellow {
   cursor: text;
 }
 
-.wiki-paragraph:hover {
-  background-color: rgb(229, 231, 235);
-}
+
 
 [contentEditable="true"] .wiki-paragraph:has(.wiki-link:hover) {
   background-color: transparent;
-}
+} */
 
 .empty-paragraph {
-  border: 1px dashed transparent;
+  border: 1px dashed ccc;
   transition: border-color 0.2s;
   margin: -0.5em 0;
-  min-height: 0.5em;
+  min-height: 5em;
   cursor: pointer;
 }
 
-#prompt-editor-content .empty-paragraph .highlight-yellow {
+#prompt-editor-content .edit-paragraph .highlight-yellow {
   background-color: yellow;
   display: block;
-  height: 1.5em;
 }
 
 .empty-paragraph:hover {
