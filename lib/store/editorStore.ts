@@ -83,33 +83,42 @@ const useEditorStore = create<EditorState>((set, get) => ({
       })
       .first();
 
-    console.log("targetP", targetP.prop("outerHTML"));
+    console.log("selectedHtml", selectedHtml);
 
     if (targetP && targetP.length > 0) {
-      const surroundingElements: string[] = [];
-      const prevTarget = targetP
-        .prevAll("p.wiki-paragraph:not(.empty-paragraph), .mw-heading")
-        .first();
-      if (prevTarget.length) {
-        surroundingElements.push(prevTarget.html() || "");
+      const prevHeading = targetP.prevAll("div.mw-heading2").first();
+
+      if (prevHeading.length) {
+        const surroundingElements: string[] = [];
+        let currentElement = prevHeading;
+
+        while (currentElement.length) {
+          if (currentElement.next().hasClass("mw-heading2")) {
+            break;
+          }
+
+          let elementText = currentElement.text() || "";
+
+          if (currentElement.is(targetP)) {
+            elementText = elementText.replace(
+              selectedHtml.trim(),
+              `<target>${selectedHtml.trim()}</target>`
+            );
+          }
+
+          surroundingElements.push(elementText);
+          currentElement = currentElement.next();
+        }
+
+        const surroundingHtml = surroundingElements.join("\n");
+        console.log("surroundingHtml", surroundingHtml);
+
+        set({
+          selectedHtml,
+          surroundingHtml,
+        });
+        return;
       }
-      surroundingElements.push(targetP.html() || "");
-      const nextTarget = targetP
-        .nextAll("p.wiki-paragraph:not(.empty-paragraph), .mw-heading")
-        .first();
-      if (nextTarget.length) {
-        surroundingElements.push(nextTarget.html() || "");
-      }
-
-      const surroundingHtml = surroundingElements.join("");
-
-      console.log("surroundingHtml", surroundingHtml);
-
-      set({
-        selectedHtml,
-        surroundingHtml,
-      });
-      return;
     }
   },
   setIsEditable: (isEditable: boolean) => set({ isEditable }),

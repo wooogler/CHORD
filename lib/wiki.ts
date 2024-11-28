@@ -74,6 +74,7 @@ export async function getArticleTalkByTitle(
 export function excludeParagraph(html: string, paragraphName: string) {
   const $ = cheerio.load(html);
   $(`div.mw-heading>[id*="${paragraphName}"]`).each((_, element) => {
+    console.log("element", element);
     const startElement = $(element).parent();
     let currentElement = startElement.next();
 

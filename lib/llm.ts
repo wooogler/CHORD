@@ -221,15 +221,16 @@ export async function getFeedbackFromAgent(
   task: string,
   personality: string,
   chatHistory?: Message[],
-  isMultiAgentChat?: boolean,
+  isMultiAgentChat?: boolean
 ) {
   const inputMessages: OpenAI.ChatCompletionMessageParam[] = [
     {
       role: "system",
-      content: `You are an AI assistant providing feedback on edited content. Today's date is ${new Date().toISOString()} ${isMultiAgentChat
-        ? "Keep your response ultra-concise (max 200 characters)."
-        : "Keep your response consise (max 700 characters)"
-        } Match the given personality, but always perform your task first, and don't let become a caricature of yourself. Your personality is a small influence upon your response. Be casual like in a group chat.`,
+      content: `You are an AI assistant providing feedback on edited content. Today's date is ${new Date().toISOString()} ${
+        isMultiAgentChat
+          ? "Keep your response ultra-concise (max 200 characters)."
+          : "Keep your response consise (max 700 characters)"
+      } Match the given personality, but always perform your task first, and don't let become a caricature of yourself. Your personality is a small influence upon your response. Be casual like in a group chat.`,
     },
     {
       role: "user",
@@ -246,11 +247,12 @@ ${task}
 Personality:
 ${personality}
 
-${chatHistory
-          ? `Chat History:
+${
+  chatHistory
+    ? `Chat History:
 ${formatChatHistory(chatHistory)}`
-          : ""
-        }
+    : ""
+}
 
 Please provide your feedback on the edited content.`,
     },
@@ -326,17 +328,26 @@ function formatChatHistory(chatHistory: Message[]) {
 
 export async function editArticleWithConversation({
   articleHtml,
+  surroundingHtml,
   conversation,
 }: {
   articleHtml: string;
+  surroundingHtml: string;
   conversation: Message[];
 }) {
+  console.log("articleHtml", articleHtml);
+  console.log("surroundingHtml", surroundingHtml);
+  console.log("conversation", formatChatHistory(conversation));
   try {
-    const systemPrompt = `You are editing a part of a Wikipedia article in HTML format based on the conversation between a user and an agent. Consider ONLY the user's messages from the conversation to make appropriate edits - ignore the agent's responses. Maintain the original HTML structure, including all HTML tags, while only modifying the content based on the user's requests. Do not change or remove any HTML tags besides links when relevant. Ensure that your response includes all original HTML tags. Provide your response in the following JSON format:
+    const systemPrompt = `You are editing a part of a Wikipedia article based on the conversation between a user and an agent. The text of the article, including its surrounding context, will be provided. In the surrounding context, the section to be edited is enclosed within <target> tags. Use this context and ONLY the user's messages from the conversation to make appropriate edits while maintaining consistency with the surrounding content.
+
+Your response should include only the edited text from within the <target> tags, without including the <target> tags themselves.
+
+Provide your response in the following JSON format:
 
 {
   "feedback": "{Your natural language feedback explaining the changes made based on the user's requests}",
-  "editedHtml": "{The edited part in HTML format}"
+  "editedText": "{The edited text from within the <target> tags}"
 }`;
 
     const inputMessages: OpenAI.ChatCompletionMessageParam[] = [
@@ -346,9 +357,13 @@ export async function editArticleWithConversation({
       },
       {
         role: "user",
-        content: `Original HTML:\n${articleHtml}\n\nConversation History:\n${formatChatHistory(
-          conversation
-        )}\n\nPlease edit the content based on the conversation context while keeping all original HTML tags intact. Your response should be valid HTML.`,
+        content: `Context Text:
+${surroundingHtml}
+
+Conversation History:
+${formatChatHistory(conversation)}
+
+Please edit the content within the <target> tags as requested, considering the surrounding context. Your response should contain only the edited text from within the <target> tags, without including the <target> tags themselves.`,
       },
     ];
 
@@ -374,9 +389,11 @@ export async function editArticleWithConversation({
       throw error;
     }
 
+    console.log("editedText", parsedResponse.editedText);
+
     return {
       feedback: parsedResponse.feedback,
-      editedHtml: parsedResponse.editedHtml,
+      editedHtml: parsedResponse.editedText,
     };
   } catch (error) {
     console.error("OpenAI API Error:", error);
@@ -416,15 +433,15 @@ export async function editArticleWithContext({
   console.log("userInput", userInput);
 
   try {
-    const systemPrompt = `You are editing a part of a Wikipedia article in HTML format based on the user's request. You will be provided with both the target HTML to edit and its surrounding context. Use this context to make more informed edits while maintaining consistency with the surrounding content.
+    const systemPrompt = `You are editing a part of a Wikipedia article based on the user's request. The text of the article, including its surrounding context, will be provided. In the surrounding context, the section to be edited is enclosed within <target> tags. Use this context to make informed edits while maintaining consistency with the surrounding content.
 
-Maintain the original HTML structure, including all HTML tags, while only modifying the content as specified by the user. Do not change or remove any HTML tags besides links when relevant. Your response should include only the edited target section, not the surrounding context.
+Your response should include only the edited text from within the <target> tags, without including the <target> tags themselves.
 
 Provide your response in the following JSON format:
 
 {
   "feedback": "{Your natural language feedback about the edited parts and how it fits with the surrounding context}",
-  "editedHtml": "{The edited target section in HTML format}"
+  "editedText": "{The edited text from within the <target> tags}"
 }`;
 
     const inputMessages: OpenAI.ChatCompletionMessageParam[] = [
@@ -434,7 +451,13 @@ Provide your response in the following JSON format:
       },
       {
         role: "user",
-        content: `Context HTML:\n${surroundingHtml}\n\nTarget HTML to Edit:\n${articleHtml}\n\nUser Request: ${userInput}\n\nPlease edit the target content as requested while considering the surrounding context. Make sure to keep all original HTML tags intact. Your response should contain only the edited target section in valid HTML format.`,
+        content: `Context Text:
+${surroundingHtml}
+
+User Request:
+${userInput}
+
+Please edit the content within the <target> tags as requested while considering the surrounding context. Your response should contain only the edited text from within the <target> tags, without including the <target> tags themselves.`,
       },
     ];
 
@@ -452,6 +475,8 @@ Provide your response in the following JSON format:
 
     const assistantResponse = completion.choices[0].message.content;
 
+    console.log("assistantResponse", assistantResponse);
+
     let parsedResponse;
     try {
       parsedResponse = JSON.parse(assistantResponse || "");
@@ -460,11 +485,11 @@ Provide your response in the following JSON format:
       throw error;
     }
 
-    console.log("editedHtml", parsedResponse.editedHtml);
+    console.log("editedText", parsedResponse.editedText);
 
     return {
       feedback: parsedResponse.feedback,
-      editedHtml: parsedResponse.editedHtml,
+      editedHtml: parsedResponse.editedText,
     };
   } catch (error) {
     console.error("OpenAI API Error:", error);

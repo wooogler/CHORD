@@ -5,7 +5,6 @@ import {
   editArticleWithConversation,
   editArticleWithUserInputOnly,
   getFeedbackFromAgent,
-  getReactionFromAgent,
 } from "@/lib/llm";
 import React, { useEffect, useRef, useState } from "react";
 import htmldiff from "node-htmldiff";
@@ -32,7 +31,6 @@ export default function ChatContainer({
     addUserMessage,
     addAssistantMessage,
     changeLastMessageMove,
-    addReactionsToMessage,
     setActiveAgent,
   } = useChatStore();
   const [editedHtml, setEditedHtml] = useState("");
@@ -142,7 +140,10 @@ export default function ChatContainer({
 
       setEditedHtml(editingResponse.editedHtml);
 
-      getFeedbackFromAgents(selectedHtml || "", editingResponse.editedHtml || "");
+      getFeedbackFromAgents(
+        selectedHtml || "",
+        editingResponse.editedHtml || ""
+      );
     } catch (error) {
       console.error(error);
     } finally {
@@ -180,7 +181,7 @@ export default function ChatContainer({
           task,
           personality,
           undefined,
-          true,
+          true
         );
 
         const agentMessage: Message = {
@@ -191,13 +192,13 @@ export default function ChatContainer({
         };
 
         addAssistantMessage(agentMessage);
-        getReactionsToMessage(
-          prevHtml,
-          postHtml,
-          agentResponse ?? "",
-          agentMessage.createdAt,
-          agentName
-        );
+        // getReactionsToMessage(
+        //   prevHtml,
+        //   postHtml,
+        //   agentResponse ?? "",
+        //   agentMessage.createdAt,
+        //   agentName
+        // );
       } catch (error) {
         console.error(error);
       }
@@ -285,7 +286,7 @@ export default function ChatContainer({
         task,
         agentProfile?.personality || "",
         latestMessagesWithActiveAgent,
-        false,
+        false
       );
 
       const agentMessage: Message = {
@@ -323,6 +324,7 @@ export default function ChatContainer({
 
     const editingResponse = await editArticleWithConversation({
       articleHtml: editedHtml,
+      surroundingHtml: surroundingHtml || "",
       conversation: latestMessagesWithActiveAgent,
     });
 
@@ -353,61 +355,61 @@ export default function ChatContainer({
     getFeedbackFromAgents(selectedHtml || "", editedHtml);
   };
 
-  const getReactionsToMessage = async (
-    prevHtml: string,
-    postHtml: string,
-    message: string,
-    messageCreatedAt: number,
-    originalAgent: string
-  ) => {
-    const agents = agentProfiles;
-    const reactions: { agentName: string; emoji: string }[] = [];
+  // const getReactionsToMessage = async (
+  //   prevHtml: string,
+  //   postHtml: string,
+  //   message: string,
+  //   messageCreatedAt: number,
+  //   originalAgent: string
+  // ) => {
+  //   const agents = agentProfiles;
+  //   const reactions: { agentName: string; emoji: string }[] = [];
 
-    const agentPromises = agents.map(async (agentProfile) => {
-      const { agentName, task, personality } = agentProfile;
+  //   const agentPromises = agents.map(async (agentProfile) => {
+  //     const { agentName, task, personality } = agentProfile;
 
-      if (
-        agentProfile?.agentName === "Community Liason" &&
-        (articleTalk === null ||
-          articleTalk === undefined ||
-          articleTalk === "")
-      ) {
-        return;
-      }
+  //     if (
+  //       agentProfile?.agentName === "Community Liason" &&
+  //       (articleTalk === null ||
+  //         articleTalk === undefined ||
+  //         articleTalk === "")
+  //     ) {
+  //       return;
+  //     }
 
-      if (agentName !== originalAgent) {
-        try {
-          const agentResponse = await getReactionFromAgent(
-            prevHtml,
-            postHtml,
-            task,
-            personality,
-            message
-          );
+  //     if (agentName !== originalAgent) {
+  //       try {
+  //         const agentResponse = await getReactionFromAgent(
+  //           prevHtml,
+  //           postHtml,
+  //           task,
+  //           personality,
+  //           message
+  //         );
 
-          reactions.push({
-            agentName,
-            emoji: agentResponse ?? "X",
-          });
-        } catch (error) {
-          console.error(error);
-        }
-      }
-    });
+  //         reactions.push({
+  //           agentName,
+  //           emoji: agentResponse ?? "X",
+  //         });
+  //       } catch (error) {
+  //         console.error(error);
+  //       }
+  //     }
+  //   });
 
-    // 모든 응답이 완료될 때까지 기다림
-    await Promise.all(agentPromises);
+  //   // 모든 응답이 완료될 때까지 기다림
+  //   await Promise.all(agentPromises);
 
-    // 모든 반응을 한 번에 추가
-    if (reactions.length > 0) {
-      addReactionsToMessage({
-        messageCreatedAt,
-        reactions,
-      });
-    }
+  //   // 모든 반응을 한 번에 추가
+  //   if (reactions.length > 0) {
+  //     addReactionsToMessage({
+  //       messageCreatedAt,
+  //       reactions,
+  //     });
+  //   }
 
-    setIsLoading(false);
-  };
+  //   setIsLoading(false);
+  // };
 
   return (
     <div className="flex flex-col flex-1 min-h-0">
