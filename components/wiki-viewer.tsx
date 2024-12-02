@@ -221,6 +221,7 @@ const WikiViewer: React.FC<WikiViewerProps> = ({ articleTitle }) => {
     emptyChatStore();
     setRightPanel("guide-only");
     alert("Initialized");
+    window.location.reload();
   };
 
   return (
