@@ -2,7 +2,9 @@ import React, { useCallback, useEffect, useRef } from "react";
 import * as cheerio from "cheerio";
 import ContentEditable, { ContentEditableEvent } from "react-contenteditable";
 import useEditorStore from "@/lib/store/editorStore";
-
+import { Button } from "@mui/material";
+import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
+import useChatStore from "@/lib/store/chatStore";
 interface WikiViewerProps {
   articleTitle: string;
 }
@@ -21,9 +23,12 @@ const modifyWikiHtml = (htmlString: string) => {
 };
 
 const WikiViewer: React.FC<WikiViewerProps> = ({ articleTitle }) => {
-  const { setContentHtml, setSelectedHtml } = useEditorStore();
+  const { setContentHtml, setSelectedHtml, setRightPanel, emptyContentLogs } =
+    useEditorStore();
+  const { emptyChatStore } = useChatStore();
   const contentHtml = useEditorStore((state) => state.contentHtml);
   const isLocked = useEditorStore((state) => state.isLocked);
+  const rightPanel = useEditorStore((state) => state.rightPanel);
 
   const contentEditableRef = useRef<string>(modifyWikiHtml(contentHtml));
 
@@ -211,6 +216,13 @@ const WikiViewer: React.FC<WikiViewerProps> = ({ articleTitle }) => {
     }
   };
 
+  const emptyStores = () => {
+    emptyContentLogs();
+    emptyChatStore();
+    setRightPanel("guide-only");
+    alert("Initialized");
+  };
+
   return (
     <div
       className="overflow-auto"
@@ -219,9 +231,30 @@ const WikiViewer: React.FC<WikiViewerProps> = ({ articleTitle }) => {
         handleParagraphSelection(e);
       }}
     >
-      <h1 id="firstHeading" className="firstHeading mw-first-heading">
-        <i>{articleTitle}</i>
-      </h1>
+      <div className="flex justify-between">
+        <h1
+          id="firstHeading"
+          className="firstHeading mw-first-heading flex-1"
+          onClick={(e) => {
+            if (e.shiftKey) {
+              emptyStores();
+            }
+          }}
+        >
+          <i>{articleTitle}</i>
+        </h1>
+        {rightPanel === "guide-only" && (
+          <Button
+            variant="contained"
+            color="success"
+            className="h-10 ml-10 mr-4"
+            onClick={() => setRightPanel("chat")}
+            startIcon={<ArrowForwardIcon />}
+          >
+            Next
+          </Button>
+        )}
+      </div>
       <ContentEditable
         className="p-4 focus:outline-none"
         id="prompt-editor-content"

@@ -168,7 +168,7 @@ export default function MessageBubble({
               );
             })}
           </Stack>
-          {["representative", "assistant"].includes(role) && (
+          {["representative", "assistant"].includes(role) && diffHtml && (
             <div className=" bg-white p-2 rounded-lg mt-2">
               <div
                 className={`diff-container ${applyStatus ? "opacity-50" : ""}`}

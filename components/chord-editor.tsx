@@ -5,7 +5,7 @@ import ChatContainer from "./chat-container";
 import WikiViewer from "./wiki-viewer";
 import EditModeSwitch from "./edit-mode-switch";
 import useEditorStore from "@/lib/store/editorStore";
-import useChatStore from "@/lib/store/chatStore";
+import GuideContainer from "./guide-container";
 
 export default function ChordEditor({
   articleHtml,
@@ -16,14 +16,15 @@ export default function ChordEditor({
   articleTitle: string;
   articleTalk: string;
 }) {
-  const { setContentHtml, emptyContentLogs } = useEditorStore();
-  const { emptyChatStore } = useChatStore();
+  const rightPanel = useEditorStore((state) => state.rightPanel);
+  const { setContentHtml } = useEditorStore();
   const isLocked = useEditorStore((state) => state.isLocked);
 
   useEffect(() => {
-    setContentHtml(articleHtml, "LOAD_ARTICLE");
-    emptyChatStore();
-    emptyContentLogs();
+    const currentContentHtml = useEditorStore.getState().contentHtml;
+    if (currentContentHtml === "") {
+      setContentHtml(articleHtml, "LOAD_ARTICLE");
+    }
   }, [articleHtml]);
 
   useEffect(() => {
@@ -45,10 +46,14 @@ export default function ChordEditor({
   return (
     <div className="flex h-full">
       <WikiViewer articleTitle={articleTitle} />
+
       <div className="flex flex-col h-full min-h-0 w-[500px] flex-shrink-0 border-l">
         <EditModeSwitch />
-
-        <ChatContainer condition="chord" articleTalk={articleTalk} />
+        {rightPanel === "chat" ? (
+          <ChatContainer condition="chord" articleTalk={articleTalk} />
+        ) : (
+          <GuideContainer />
+        )}
       </div>
     </div>
   );

@@ -1,5 +1,12 @@
 import React, { useEffect } from "react";
-import { Button, FormControlLabel, IconButton, Switch } from "@mui/material";
+import {
+  Button,
+  FormControlLabel,
+  IconButton,
+  Switch,
+  Tab,
+  Tabs,
+} from "@mui/material";
 import useEditorStore from "@/lib/store/editorStore";
 import UndoIcon from "@mui/icons-material/Undo";
 import RedoIcon from "@mui/icons-material/Redo";
@@ -10,8 +17,10 @@ const EditModeSwitch: React.FC<{ isBaseEditor?: boolean }> = ({
   isBaseEditor = false,
 }) => {
   const isEditable = useEditorStore((state) => state.isEditable);
+  const rightPanel = useEditorStore((state) => state.rightPanel);
   const { getMessageLogs } = useChatStore();
-  const { setIsEditable, undo, redo, getContentLogs } = useEditorStore();
+  const { setIsEditable, undo, redo, getContentLogs, setRightPanel } =
+    useEditorStore();
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -62,7 +71,7 @@ const EditModeSwitch: React.FC<{ isBaseEditor?: boolean }> = ({
 
   return (
     <div className="flex items-center justify-between">
-      <div className="flex">
+      <div className="flex ml-2">
         <IconButton onClick={undo} title="Undo">
           <UndoIcon />
         </IconButton>
@@ -70,6 +79,12 @@ const EditModeSwitch: React.FC<{ isBaseEditor?: boolean }> = ({
           <RedoIcon />
         </IconButton>
       </div>
+      {rightPanel !== "guide-only" && (
+        <Tabs value={rightPanel} onChange={(_, value) => setRightPanel(value)}>
+          <Tab value="guide" label="Guide" />
+          <Tab value="chat" label="Chat" />
+        </Tabs>
+      )}
       {isBaseEditor ? (
         <FormControlLabel
           control={
@@ -82,14 +97,16 @@ const EditModeSwitch: React.FC<{ isBaseEditor?: boolean }> = ({
           label={isEditable ? "Edit mode ON" : "Edit mode OFF"}
         />
       ) : (
-        <Button
-          variant="outlined"
-          onClick={handleDownloadLogs}
-          title="Download logs"
-          startIcon={<FileDownload />}
-        >
-          Download Logs
-        </Button>
+        rightPanel !== "guide-only" && (
+          <Button
+            variant="outlined"
+            onClick={handleDownloadLogs}
+            title="Download logs"
+            startIcon={<FileDownload />}
+          >
+            Logs
+          </Button>
+        )
       )}
     </div>
   );

@@ -25,6 +25,7 @@ export default function ChatContainer({
 }) {
   const messages = useChatStore((state) => state.messages);
   const activeAgent = useChatStore((state) => state.activeAgent);
+  const rightPanel = useEditorStore((state) => state.rightPanel);
   const {
     setIsLoading,
     setPhase,
@@ -47,6 +48,17 @@ export default function ChatContainer({
       messagesEndRef.current.scrollTop = messagesEndRef.current.scrollHeight;
     }
   };
+
+  useEffect(() => {
+    if (rightPanel === "chat" && messages.length === 0) {
+      addAssistantMessage({
+        role: "assistant",
+        content:
+          "Hello! I'm here to help you edit the article. Please select the paragraph to edit.",
+        createdAt: Date.now(),
+      });
+    }
+  }, [messages.length, rightPanel]);
 
   useEffect(() => {
     scrollToBottom();
