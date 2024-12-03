@@ -50,6 +50,12 @@ export async function getArticleHtmlByTitle({
         $(element).parent().remove();
       }
     });
+    $("sup").remove();
+    $("table[class*='sidebar']").remove();
+    $("table[class*='ambox']").remove();
+    $("span.mw-editsection").remove();
+    $("p").addClass("wiki-paragraph");
+    $("a").addClass("wiki-link");
 
     return $.html();
   } catch (error) {

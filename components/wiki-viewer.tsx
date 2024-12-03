@@ -10,19 +10,6 @@ interface WikiViewerProps {
   paragraphName?: string;
 }
 
-const modifyWikiHtml = (htmlString: string) => {
-  const $ = cheerio.load(htmlString);
-  $("sup").remove();
-  // $("div.mw-heading2").after('<p class="wiki-paragraph empty-paragraph"></p>');
-  // $("div.mw-heading3").after('<p class="wiki-paragraph empty-paragraph"></p>');
-  // $("p:not(.wiki-paragraph)").after(
-  //   '<p class="wiki-paragraph empty-paragraph"></p>'
-  // );
-  $("p").addClass("wiki-paragraph");
-  $("a").addClass("wiki-link");
-  return $.html();
-};
-
 const WikiViewer: React.FC<WikiViewerProps> = ({
   articleTitle,
   paragraphName,
@@ -34,7 +21,7 @@ const WikiViewer: React.FC<WikiViewerProps> = ({
   const isLocked = useEditorStore((state) => state.isLocked);
   const rightPanel = useEditorStore((state) => state.rightPanel);
 
-  const contentEditableRef = useRef<string>(modifyWikiHtml(contentHtml));
+  const contentEditableRef = useRef<string>(contentHtml);
 
   const handleLinkClick = useCallback(
     (event: React.MouseEvent<HTMLDivElement>) => {
@@ -114,15 +101,6 @@ const WikiViewer: React.FC<WikiViewerProps> = ({
       setSelectedHtml(highlightSpan.innerHTML || null);
     }
   };
-
-  useEffect(() => {
-    const removeEditSections = () => {
-      const editSections = document.querySelectorAll(".mw-editsection");
-      editSections.forEach((section) => section.remove());
-    };
-
-    removeEditSections();
-  }, [contentHtml]);
 
   const handleContentChange = (evt: ContentEditableEvent) => {
     if (isLocked) return;
@@ -279,7 +257,7 @@ const WikiViewer: React.FC<WikiViewerProps> = ({
       <ContentEditable
         className="p-4 focus:outline-none"
         id="prompt-editor-content"
-        html={modifyWikiHtml(contentHtml)}
+        html={contentHtml}
         disabled={true}
         onChange={handleContentChange}
         onBlur={handleBlur}
