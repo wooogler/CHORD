@@ -259,7 +259,25 @@ const useEditorStore = create<EditorState>()(
     }),
     {
       name: "editor-storage",
-      storage: createJSONStorage(() => localStorage),
+      storage: createJSONStorage(() => ({
+        getItem: (name) => {
+          const fullUrl = window.location.pathname + window.location.search;
+          const key = `${name}-${fullUrl}`;
+          return localStorage.getItem(key)
+            ? JSON.parse(localStorage.getItem(key) || "")
+            : null;
+        },
+        setItem: (name, value) => {
+          const fullUrl = window.location.pathname + window.location.search;
+          const key = `${name}-${fullUrl}`;
+          localStorage.setItem(key, JSON.stringify(value));
+        },
+        removeItem: (name) => {
+          const fullUrl = window.location.pathname + window.location.search;
+          const key = `${name}-${fullUrl}`;
+          localStorage.removeItem(key);
+        },
+      })),
       partialize: (state) => ({
         contentHtml: state.contentHtml,
         contentHistory: state.contentHistory,
