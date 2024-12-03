@@ -7,6 +7,7 @@ import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import useChatStore from "@/lib/store/chatStore";
 interface WikiViewerProps {
   articleTitle: string;
+  paragraphName?: string;
 }
 
 const modifyWikiHtml = (htmlString: string) => {
@@ -22,7 +23,10 @@ const modifyWikiHtml = (htmlString: string) => {
   return $.html();
 };
 
-const WikiViewer: React.FC<WikiViewerProps> = ({ articleTitle }) => {
+const WikiViewer: React.FC<WikiViewerProps> = ({
+  articleTitle,
+  paragraphName,
+}) => {
   const { setContentHtml, setSelectedHtml, setRightPanel, emptyContentLogs } =
     useEditorStore();
   const { emptyChatStore } = useChatStore();
@@ -224,6 +228,22 @@ const WikiViewer: React.FC<WikiViewerProps> = ({ articleTitle }) => {
     window.location.reload();
   };
 
+  useEffect(() => {
+    console.log("paragraphName", paragraphName);
+    if (paragraphName) {
+      setTimeout(() => {
+        const element = document.querySelector(`[id*="${paragraphName}"]`);
+        console.log("element", element);
+        if (element) {
+          element.scrollIntoView({
+            behavior: "smooth",
+            block: "center",
+          });
+        }
+      }, 100);
+    }
+  }, [paragraphName, contentHtml]);
+
   return (
     <div
       className="overflow-auto"
@@ -232,7 +252,7 @@ const WikiViewer: React.FC<WikiViewerProps> = ({ articleTitle }) => {
         handleParagraphSelection(e);
       }}
     >
-      <div className="flex justify-between">
+      <div className="flex justify-between sticky top-0 bg-white z-10">
         <h1
           id="firstHeading"
           className="firstHeading mw-first-heading flex-1"

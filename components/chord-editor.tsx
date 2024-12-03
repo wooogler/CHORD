@@ -11,10 +11,12 @@ export default function ChordEditor({
   articleHtml,
   articleTitle,
   articleTalk,
+  paragraphName,
 }: {
   articleHtml: string;
   articleTitle: string;
   articleTalk: string;
+  paragraphName?: string;
 }) {
   const rightPanel = useEditorStore((state) => state.rightPanel);
   const { setContentHtml } = useEditorStore();
@@ -45,7 +47,7 @@ export default function ChordEditor({
 
   return (
     <div className="flex h-full">
-      <WikiViewer articleTitle={articleTitle} />
+      <WikiViewer articleTitle={articleTitle} paragraphName={paragraphName} />
 
       <div className="flex flex-col h-full min-h-0 w-[500px] flex-shrink-0 border-l">
         <EditModeSwitch />

@@ -55,6 +55,7 @@ export default async function PromptPage({
                   articleHtml={articleHtml}
                   articleTitle={title}
                   articleTalk={articleTalk}
+                  paragraphName={paragraphName}
                 />
               </Suspense>
             </article>
@@ -69,6 +70,7 @@ export default async function PromptPage({
                   articleHtml={articleHtml}
                   articleTitle={title}
                   articleTalk={articleTalk}
+                  paragraphName={paragraphName}
                 />
               </Suspense>
             </article>

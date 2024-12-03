@@ -10,9 +10,11 @@ import GuideContainer from "./guide-container";
 export default function PromptEditor({
   articleHtml,
   articleTitle,
+  paragraphName,
 }: {
   articleHtml: string;
   articleTitle: string;
+  paragraphName?: string;
 }) {
   const { setContentHtml } = useEditorStore();
   const isLocked = useEditorStore((state) => state.isLocked);
@@ -42,7 +44,7 @@ export default function PromptEditor({
 
   return (
     <div className="flex h-full">
-      <WikiViewer articleTitle={articleTitle} />
+      <WikiViewer articleTitle={articleTitle} paragraphName={paragraphName} />
 
       <div className="flex flex-col h-full w-[500px] flex-shrink-0 border-l">
         <EditModeSwitch />

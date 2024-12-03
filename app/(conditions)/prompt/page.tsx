@@ -46,7 +46,11 @@ export default async function PromptPage({
             </Suspense>
             <article className="border-x border-b rounded-b-lg p-4 flex-grow overflow-hidden">
               <Suspense fallback={<div>Loading...</div>}>
-                <PromptEditor articleHtml={articleHtml} articleTitle={title} />
+                <PromptEditor
+                  articleHtml={articleHtml}
+                  articleTitle={title}
+                  paragraphName={paragraphName}
+                />
               </Suspense>
             </article>
           </div>
@@ -56,7 +60,11 @@ export default async function PromptPage({
           <div className="flex p-4 h-full overflow-hidden rounded-lg border">
             <article className="flex-grow overflow-hidden">
               <Suspense fallback={<div>Loading...</div>}>
-                <PromptEditor articleHtml={articleHtml} articleTitle={title} />
+                <PromptEditor
+                  articleHtml={articleHtml}
+                  articleTitle={title}
+                  paragraphName={paragraphName}
+                />
               </Suspense>
             </article>
           </div>
