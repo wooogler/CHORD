@@ -56,6 +56,7 @@ export async function getArticleHtmlByTitle({
     $("span.mw-editsection").remove();
     $("p").addClass("wiki-paragraph");
     $("a").addClass("wiki-link");
+    $("div[role='note']").remove();
 
     return $.html();
   } catch (error) {
