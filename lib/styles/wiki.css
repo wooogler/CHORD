@@ -2789,6 +2789,7 @@ figure[typeof~="mw:File/Thumb"] > figcaption:empty {
   .mw-heading2,
   h2 {
     margin-bottom: 0.6em;
+    margin-top: 0.3em;
     border-bottom: 1px solid var(--border-color-base, #a2a9b1);
   }
   .mw-heading3,
