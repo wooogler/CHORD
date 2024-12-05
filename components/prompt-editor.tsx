@@ -51,7 +51,7 @@ export default function PromptEditor({
         {rightPanel === "chat" ? (
           <ChatContainer condition="prompt" />
         ) : (
-          <GuideContainer />
+          <GuideContainer articleTitle={articleTitle} />
         )}
       </div>
     </div>

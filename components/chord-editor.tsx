@@ -54,7 +54,7 @@ export default function ChordEditor({
         {rightPanel === "chat" ? (
           <ChatContainer condition="chord" articleTalk={articleTalk} />
         ) : (
-          <GuideContainer />
+          <GuideContainer articleTitle={articleTitle} />
         )}
       </div>
     </div>
