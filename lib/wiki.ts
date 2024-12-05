@@ -103,14 +103,19 @@ export function makeEditableParagraph(html: string, paragraphName: string) {
   $(`div.mw-heading>[id*="${paragraphName}"]`).each((_, element) => {
     const startElement = $(element).parent();
 
-    // 시작 부분에 빈 문단 추가
     startElement.after('<p class="edit-paragraph empty-paragraph"></p>');
 
-    let currentElement = startElement.next().next(); // 빈 문단 다음 요소부터 시작
+    let currentElement = startElement.next().next();
     while (currentElement.length && !currentElement.hasClass("mw-heading")) {
       const nextElement = currentElement.next();
       if (currentElement.is("p")) {
-        // 문단 사이에 빈 문단 추가
+        // <a> 태그를 텍스트로 변환
+        currentElement.find("a").each((_, link) => {
+          const $link = $(link);
+          const textContent = $link.text();
+          $link.replaceWith(textContent);
+        });
+
         currentElement.addClass("edit-paragraph");
         currentElement.after('<p class="edit-paragraph empty-paragraph"></p>');
       }
