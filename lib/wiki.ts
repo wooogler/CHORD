@@ -54,8 +54,8 @@ export async function getArticleHtmlByTitle({
     $("table[class*='sidebar']").remove();
     $("table[class*='ambox']").remove();
     $("span.mw-editsection").remove();
-    $("p").addClass("wiki-paragraph");
-    $("a").addClass("wiki-link");
+    // $("p").addClass("wiki-paragraph");
+    // $("a").addClass("wiki-link");
     $("div[role='note']").remove();
     $("link").remove();
 

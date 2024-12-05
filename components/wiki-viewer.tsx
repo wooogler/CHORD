@@ -10,6 +10,14 @@ interface WikiViewerProps {
   paragraphName?: string;
 }
 
+const modifyWikiHtml = (htmlString: string) => {
+  const $ = cheerio.load(htmlString);
+  $("sup").remove();
+  $("p").addClass("wiki-paragraph");
+  $("a").addClass("wiki-link");
+  return $.html();
+};
+
 const WikiViewer: React.FC<WikiViewerProps> = ({
   articleTitle,
   paragraphName,
@@ -21,7 +29,7 @@ const WikiViewer: React.FC<WikiViewerProps> = ({
   const isLocked = useEditorStore((state) => state.isLocked);
   const rightPanel = useEditorStore((state) => state.rightPanel);
 
-  const contentEditableRef = useRef<string>(contentHtml);
+  const contentEditableRef = useRef<string>(modifyWikiHtml(contentHtml));
 
   const handleLinkClick = useCallback(
     (event: React.MouseEvent<HTMLDivElement>) => {
@@ -257,7 +265,7 @@ const WikiViewer: React.FC<WikiViewerProps> = ({
       <ContentEditable
         className="p-4 focus:outline-none"
         id="prompt-editor-content"
-        html={contentHtml}
+        html={modifyWikiHtml(contentHtml)}
         disabled={true}
         onChange={handleContentChange}
         onBlur={handleBlur}
