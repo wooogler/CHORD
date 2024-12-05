@@ -1,7 +1,7 @@
 import ConditionNav from "@/components/condition-nav";
 import PromptEditor from "@/components/prompt-editor";
 import SideNav from "@/components/side-nav";
-import { excludeParagraph, getArticleHtmlByTitle } from "@/lib/wiki";
+import { getArticleHtmlByTitle, makeEditableParagraph } from "@/lib/wiki";
 import { Suspense } from "react";
 
 export default async function PromptPage({
@@ -27,7 +27,7 @@ export default async function PromptPage({
       })) || "";
 
     if (paragraphName) {
-      articleHtml = excludeParagraph(articleHtml, paragraphName);
+      articleHtml = makeEditableParagraph(articleHtml, paragraphName);
     }
   }
 

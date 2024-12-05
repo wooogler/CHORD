@@ -68,7 +68,7 @@ const useEditorStore = create<EditorState>()(
       surroundingHtml: null,
       isEditable: true,
       isLocked: false,
-      rightPanel: "guide-only",
+      rightPanel: "chat",
       setRightPanel: (rightPanel: "guide-only" | "chat" | "guide") =>
         set({ rightPanel }),
       setContentHtml: (contentHtml: string, action?: string) => {

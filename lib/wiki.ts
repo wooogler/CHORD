@@ -79,20 +79,43 @@ export async function getArticleTalkByTitle(
   }
 }
 
-export function excludeParagraph(html: string, paragraphName: string) {
+// export function excludeParagraph(html: string, paragraphName: string) {
+//   const $ = cheerio.load(html);
+//   $(`div.mw-heading>[id*="${paragraphName}"]`).each((_, element) => {
+//     const startElement = $(element).parent();
+//     let currentElement = startElement.next();
+
+//     while (currentElement.length && !currentElement.hasClass("mw-heading")) {
+//       const nextElement = currentElement.next();
+//       if (currentElement.is("p")) {
+//         currentElement.remove();
+//       }
+//       currentElement = nextElement;
+//     }
+//     startElement.after("<p class='target-paragraph'>Write this paragraph</p>");
+//   });
+
+//   return $.html();
+// }
+
+export function makeEditableParagraph(html: string, paragraphName: string) {
   const $ = cheerio.load(html);
   $(`div.mw-heading>[id*="${paragraphName}"]`).each((_, element) => {
     const startElement = $(element).parent();
-    let currentElement = startElement.next();
 
+    // 시작 부분에 빈 문단 추가
+    startElement.after('<p class="edit-paragraph empty-paragraph"></p>');
+
+    let currentElement = startElement.next().next(); // 빈 문단 다음 요소부터 시작
     while (currentElement.length && !currentElement.hasClass("mw-heading")) {
       const nextElement = currentElement.next();
       if (currentElement.is("p")) {
-        currentElement.remove();
+        // 문단 사이에 빈 문단 추가
+        currentElement.addClass("edit-paragraph");
+        currentElement.after('<p class="edit-paragraph empty-paragraph"></p>');
       }
       currentElement = nextElement;
     }
-    startElement.after("<p class='target-paragraph'>Write this paragraph</p>");
   });
 
   return $.html();

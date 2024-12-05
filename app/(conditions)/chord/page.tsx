@@ -2,9 +2,9 @@ import ChordEditor from "@/components/chord-editor";
 import ConditionNav from "@/components/condition-nav";
 import SideNav from "@/components/side-nav";
 import {
-  excludeParagraph,
   getArticleHtmlByTitle,
   getArticleTalkByTitle,
+  makeEditableParagraph,
 } from "@/lib/wiki";
 import { Suspense } from "react";
 
@@ -31,7 +31,7 @@ export default async function PromptPage({
         oldid: searchParams?.oldid,
       })) || "";
     if (paragraphName) {
-      articleHtml = excludeParagraph(articleHtml, paragraphName);
+      articleHtml = makeEditableParagraph(articleHtml, paragraphName);
     }
     articleTalk = (await getArticleTalkByTitle(title)) || "";
   }
