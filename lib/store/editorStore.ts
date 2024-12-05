@@ -281,7 +281,6 @@ const useEditorStore = create<EditorState>()(
       partialize: (state) => ({
         contentHtml: state.contentHtml,
         contentLogs: state.contentLogs,
-        rightPanel: state.rightPanel,
       }),
     }
   )
