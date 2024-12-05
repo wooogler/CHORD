@@ -56,6 +56,31 @@ export default function ResourceList({
             </a>
           </li>
         </ul>
+      ) : articleTitle === "Virginia Tech" ? (
+        <ul className="list-disc ml-4">
+          <li>
+            <a
+              href="https://web.archive.org/web/20181216183433/https://www.washingtonpost.com/education/2018/11/14/amazon-hq-arrival-spurs-virginia-tech-build-technology-campus-northern-virginia/"
+              target="_blank"
+            >
+              Svrluga, Susan (November 13, 2018). &quot;Amazon arrival spurs
+              Virginia Tech to build technology campus in Northern
+              Virginia&quot;. Washington Post. Archived from the original on
+              December 16, 2018.
+            </a>
+          </li>
+          <li>
+            <a
+              href="https://web.archive.org/web/20190531165248/https://www.roanoke.com/news/education/higher_education/virginia_tech/some-incoming-virginia-tech-freshmen-offered-money-to-delay-start/article_6ed2a7b2-3b31-500a-a810-e3f968866c3b.html"
+              target="_blank"
+            >
+              Korth, Robby (May 29, 2019). &quot;Some incoming Virginia Tech
+              freshmen offered money to delay start in effort to relieve
+              enrollment strain&quot;. Roanoke Times. Archived from the original
+              on May 31, 2019. Retrieved May 31, 2019.
+            </a>
+          </li>
+        </ul>
       ) : (
         <></>
       )}
