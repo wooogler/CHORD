@@ -65,7 +65,8 @@ const useChatStore = create<ChatState>()(
       activeAgent: null,
       isLoading: false,
       phase: "prompt",
-      emptyChatStore: () => set({ messages: [], messageLogs: [] }),
+      emptyChatStore: () =>
+        set({ messages: [], messageLogs: [], phase: "prompt" }),
       addUserMessage: (userMessage) =>
         set((state) => ({
           messages: [...state.messages, userMessage],
@@ -169,7 +170,6 @@ const useChatStore = create<ChatState>()(
       partialize: (state) => ({
         messages: state.messages,
         messageLogs: state.messageLogs,
-        activeAgent: state.activeAgent,
         phase: state.phase,
       }),
     }

@@ -248,21 +248,27 @@ export default function ChatContainer({
 
     setIsLoading(true);
 
+    const currentMessages = useChatStore.getState().messages;
+
     const agentProfile = agentProfiles.find(
       (agent) => agent.agentName === activeAgent
     );
     try {
-      const latestMessagesWithActiveAgent = messages.reduceRight(
+      const latestMessagesWithActiveAgent = currentMessages.reduceRight(
         (acc: Message[], curr) => {
           if (
-            acc.length === 0 &&
-            (curr.agentName === activeAgent || curr.activeAgent === activeAgent)
+            (acc.length === 0 &&
+              curr.agentName === activeAgent &&
+              curr.activeAgent === activeAgent) ||
+            (curr.role === "user" && curr.activeAgent === activeAgent)
           ) {
             return [curr];
           }
           if (
-            acc.length > 0 &&
-            (curr.agentName === activeAgent || curr.activeAgent === activeAgent)
+            (acc.length > 0 &&
+              curr.agentName === activeAgent &&
+              curr.activeAgent === activeAgent) ||
+            (curr.role === "user" && curr.activeAgent === activeAgent)
           ) {
             return [curr, ...acc];
           }

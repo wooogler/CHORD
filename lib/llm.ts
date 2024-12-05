@@ -235,10 +235,10 @@ export async function getFeedbackFromAgent(
     {
       role: "user",
       content: `
-Existing HTML:
+Existing Article:
 ${cleanDiffHtml(prevHtml)}
 
-The HTML after the user's edit:
+The Article after the user's edit:
 ${cleanDiffHtml(postHtml)}
 
 Task:
