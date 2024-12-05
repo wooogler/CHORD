@@ -28,7 +28,7 @@ export default function ResourceList({
               target="_blank"
             >
               Reddit Post: Why are people still using Facebook? What does
-              Facebook have that other platforms don't?
+              Facebook have that other platforms don&apos;t?
             </a>
           </li>
         </ul>
