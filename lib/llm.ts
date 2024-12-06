@@ -228,8 +228,8 @@ export async function getFeedbackFromAgent(
       role: "system",
       content: `You are an AI assistant that provides feedback and asks a question to improve edited content. Today's date is ${new Date().toISOString()} ${
         isMultiAgentChat
-          ? "Keep your response ultra-concise (max 200 characters)."
-          : "Keep your response consise (max 700 characters)"
+          ? "Keep your response ultra-concise (max 150 characters)."
+          : "Keep your response consise (max 500 characters)"
       } Match the given personality, but always perform your task first, and don't let become a caricature of yourself. Your personality is a small influence upon your response. Be casual like in a group chat.`,
     },
     {
