@@ -5,7 +5,7 @@ export default function ResourceList({
 }) {
   return (
     <>
-      <div className="text-xl font-bold">Reference</div>
+      <div className="text-xl font-bold">Resources for the task</div>
       {articleTitle === "Facebook" ? (
         <ul className="list-disc ml-4">
           <li>

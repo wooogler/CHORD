@@ -1,9 +1,7 @@
 export default function NormsList() {
   return (
     <>
-      <div className="text-xl font-bold">
-        Reference to edit Wikipedia articles
-      </div>
+      <div className="text-xl font-bold">Wikipedia Editing Principles</div>
       <ul className="list-disc ml-4">
         <li>
           <a
