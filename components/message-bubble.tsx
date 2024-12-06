@@ -105,7 +105,7 @@ export default function MessageBubble({
       applyStatus: apply ? "applied" : "cancelled",
     });
     setIsLocked(false);
-    setSelectedHtml(null);
+    setSelectedHtml(null, null);
     setPhase("prompt");
   };
 

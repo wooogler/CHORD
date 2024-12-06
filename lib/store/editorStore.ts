@@ -27,7 +27,7 @@ interface EditorState {
   rightPanel: "guide-only" | "chat" | "guide";
   setRightPanel: (rightPanel: "guide-only" | "chat" | "guide") => void;
   setContentHtml: (contentHtml: string, action?: string) => void;
-  setSelectedHtml: (selectedHtml: string | null) => void;
+  setSelectedHtml: (selectedHtml: string | null, pIndex: number | null) => void;
   setIsEditable: (isEditable: boolean) => void;
   setIsLocked: (isLocked: boolean) => void;
   emptyContentLogs: () => void;
@@ -75,8 +75,8 @@ const useEditorStore = create<EditorState>()(
         get().addToHistory(contentHtml);
         get().addToLogs({ html: contentHtml, action: action || "SET_CONTENT" });
       },
-      setSelectedHtml: (selectedHtml: string | null) => {
-        if (!selectedHtml) {
+      setSelectedHtml: (selectedHtml: string | null, pIndex: number | null) => {
+        if (selectedHtml === null) {
           set({ selectedHtml: null, surroundingHtml: null });
           return;
         }
@@ -84,14 +84,15 @@ const useEditorStore = create<EditorState>()(
         const contentHtml = get().contentHtml;
         const $ = cheerio.load(contentHtml);
 
-        const targetP = $("p.wiki-paragraph")
-          .filter((_, elem) => {
-            const elemHtml = $(elem).html()?.trim() || "";
-            return elemHtml.includes(selectedHtml.trim());
-          })
-          .first();
-
-        console.log("selectedHtml", selectedHtml);
+        const targetP =
+          pIndex !== null
+            ? $("p.edit-paragraph").eq(pIndex)
+            : $("p.edit-paragraph")
+                .filter((_, elem) => {
+                  const elemHtml = $(elem).html()?.trim() || "";
+                  return elemHtml.includes(selectedHtml.trim());
+                })
+                .first();
 
         if (targetP && targetP.length > 0) {
           const prevHeading = targetP.prevAll("div.mw-heading2").first();
@@ -101,24 +102,36 @@ const useEditorStore = create<EditorState>()(
             let currentElement = prevHeading;
 
             while (currentElement.length) {
-              if (currentElement.next().hasClass("mw-heading2")) {
-                break;
-              }
-
               let elementText = currentElement.text() || "";
 
+              console.log("currentElement", currentElement.html());
+              console.log("targetP", targetP.html());
+
               if (currentElement.is(targetP)) {
+                console.log("elementText", elementText);
                 elementText = elementText.replace(
                   selectedHtml.trim(),
-                  `<target>${selectedHtml.trim()}</target>`
+                  `<target>${selectedHtml.trim()}</target>${
+                    selectedHtml.trim() ? "" : "\n"
+                  }`
                 );
               }
 
-              surroundingElements.push(elementText);
+              if (elementText.trim() !== "") {
+                surroundingElements.push(elementText);
+              }
+              if (currentElement.hasClass("mw-heading")) {
+                surroundingElements.push("");
+              }
+
+              if (currentElement.next().hasClass("mw-heading2")) {
+                break;
+              }
               currentElement = currentElement.next();
             }
 
             const surroundingHtml = surroundingElements.join("\n");
+
             console.log("surroundingHtml", surroundingHtml);
 
             set({
@@ -143,6 +156,18 @@ const useEditorStore = create<EditorState>()(
         set((state) => {
           const $ = cheerio.load(state.contentHtml);
           const highlightedSpan = $("span.highlight-yellow");
+          if (originalHtml === "") {
+            const emptyP = highlightedSpan.closest("p");
+            if (emptyP.length && emptyP.hasClass("empty-paragraph")) {
+              emptyP.removeClass("empty-paragraph");
+              emptyP.before(
+                '<p class="edit-paragraph empty-paragraph wiki-paragraph"></p>'
+              );
+              emptyP.after(
+                '<p class="edit-paragraph empty-paragraph wiki-paragraph"></p>'
+              );
+            }
+          }
 
           if (highlightedSpan.length) {
             if (apply) {

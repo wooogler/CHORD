@@ -102,11 +102,21 @@ const WikiViewer: React.FC<WikiViewerProps> = ({
       paragraph.appendChild(highlightSpan);
       paragraph.setAttribute("contenteditable", "true");
 
+      let pIndex: number | null = null;
+      const editParagraphs = editor?.querySelectorAll("p.edit-paragraph");
+      if (editParagraphs) {
+        editParagraphs.forEach((p, index) => {
+          if (p === paragraph) {
+            pIndex = index;
+          }
+        });
+      }
+
       setContentHtml(
         document.getElementById("prompt-editor-content")?.innerHTML || "",
         "SELECT_PARAGRAPH"
       );
-      setSelectedHtml(highlightSpan.innerHTML || null);
+      setSelectedHtml(highlightSpan.innerHTML, pIndex);
     }
   };
 
@@ -215,11 +225,9 @@ const WikiViewer: React.FC<WikiViewerProps> = ({
   };
 
   useEffect(() => {
-    console.log("paragraphName", paragraphName);
     if (paragraphName) {
       setTimeout(() => {
         const element = document.querySelector(`[id*="${paragraphName}"]`);
-        console.log("element", element);
         if (element) {
           element.scrollIntoView({
             behavior: "smooth",
@@ -228,7 +236,7 @@ const WikiViewer: React.FC<WikiViewerProps> = ({
         }
       }, 100);
     }
-  }, [paragraphName, contentHtml]);
+  }, [paragraphName]);
 
   return (
     <div

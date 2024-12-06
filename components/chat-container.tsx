@@ -467,7 +467,7 @@ export default function ChatContainer({
           userInput={userInput}
           setUserInput={setUserInput}
           handleSubmitPrompt={handleSubmitPrompt}
-          isTextSelected={!!selectedHtml}
+          isTextSelected={selectedHtml !== null}
         />
       ) : (
         <ChordInput
@@ -476,7 +476,7 @@ export default function ChatContainer({
           handleSubmitReply={handleSubmitReply}
           handleSubmitSuggestion={handleSubmitSuggestion}
           handleEditWithActiveAgent={handleEditWithActiveAgent}
-          isTextSelected={!!selectedHtml}
+          isTextSelected={selectedHtml !== null}
         />
       )}
     </div>
