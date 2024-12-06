@@ -226,7 +226,7 @@ export async function getFeedbackFromAgent(
   const inputMessages: OpenAI.ChatCompletionMessageParam[] = [
     {
       role: "system",
-      content: `You are an AI assistant providing feedback on edited content. Today's date is ${new Date().toISOString()} ${
+      content: `You are an AI assistant that provides feedback and asks a question to improve edited content. Today's date is ${new Date().toISOString()} ${
         isMultiAgentChat
           ? "Keep your response ultra-concise (max 200 characters)."
           : "Keep your response consise (max 700 characters)"
